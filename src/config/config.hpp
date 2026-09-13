@@ -10,4 +10,4 @@ constexpr uint32_t HEIGHT{600};
 constexpr int32_t MAX_FRAMES_IN_FLIGHT{2};
 constexpr uint32_t PARTICLE_COUNT{8960};
 constexpr uint32_t THREADS_PER_GROUP{256};
-constexpr auto SHADER_NAME = "particle.spv";
+constexpr auto SHADER_NAME = "main.spv";
