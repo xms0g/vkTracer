@@ -80,13 +80,6 @@ private:
 
 	static bool checkDeviceSuitable(const vk::raii::PhysicalDevice& phyDevice);
 
-	void copyBuffer(const Buffer& dstBuffer, const Buffer& srcBuffer, vk::DeviceSize size) const;
-
-	[[nodiscard]]
-	vk::raii::CommandBuffer beginSingleTimeCommands() const;
-
-	void endSingleTimeCommands(const vk::raii::CommandBuffer& commandBuffer) const;
-
 	struct ComputePushConstants {
 		uint32_t width;
 		uint32_t height;
@@ -115,7 +108,6 @@ private:
 	std::vector<vk::raii::DescriptorSet> mGraphicsDescriptorSets;
 	GraphicsPipeline mGraphicsPipeline{};
 	ComputePipeline mComputePipeline{};
-	std::vector<Buffer> mShaderStorageBuffers; // remove
 	std::vector<vk::raii::Image> mShaderStorageImages;
 	std::vector<DeviceMemory> mShaderStorageImageMemory;
 	std::vector<vk::raii::ImageView> mShaderStorageImageViews;

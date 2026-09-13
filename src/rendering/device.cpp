@@ -562,7 +562,7 @@ void Device::recordComputeCommandBuffer() {
 		vk::ShaderStageFlagBits::eCompute,
 		0,
 		vk::ArrayProxy<const ComputePushConstants>(pc));
-	(*commandBuffer).dispatch(256 / 8, 256 / 8, 1);
+	(*commandBuffer).dispatch(WIDTH / THREADS_PER_GROUP, HEIGHT / THREADS_PER_GROUP, 1);
 
 	const vk::ImageMemoryBarrier2 barrier1{
 		.srcStageMask = vk::PipelineStageFlagBits2::eComputeShader,
@@ -671,33 +671,4 @@ bool Device::checkDeviceSuitable(const vk::raii::PhysicalDevice& phyDevice) {
 			supportsExtendedDynamicState;
 
 	return supportsVulkan1_3 && supportsGraphics && supportsAllRequiredExtensions && supportsRequiredFeatures;
-}
-
-void Device::copyBuffer(const Buffer& dstBuffer, const Buffer& srcBuffer, const vk::DeviceSize size) const {
-	const vk::raii::CommandBuffer commandCopyBuffer = beginSingleTimeCommands();
-	commandCopyBuffer.copyBuffer(*srcBuffer, *dstBuffer, vk::BufferCopy(0, 0, size));
-	endSingleTimeCommands(commandCopyBuffer);
-}
-
-vk::raii::CommandBuffer Device::beginSingleTimeCommands() const {
-	const vk::CommandBufferAllocateInfo allocInfo{
-		.commandPool = **mCommandPool,
-		.level = vk::CommandBufferLevel::ePrimary,
-		.commandBufferCount = 1
-	};
-
-	vk::raii::CommandBuffer commandBuffer = std::move(mDevice.allocateCommandBuffers(allocInfo).front());
-	constexpr vk::CommandBufferBeginInfo beginInfo{.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit};
-	commandBuffer.begin(beginInfo);
-
-	return commandBuffer;
-}
-
-void Device::endSingleTimeCommands(const vk::raii::CommandBuffer& commandBuffer) const {
-	commandBuffer.end();
-
-	const vk::SubmitInfo submitInfo{.commandBufferCount = 1, .pCommandBuffers = &*commandBuffer};
-
-	mQueue.submit(submitInfo, nullptr);
-	mQueue.waitIdle();
 }
