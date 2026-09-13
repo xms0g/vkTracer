@@ -1,24 +1,26 @@
 #pragma once
 
 template<QueueType T>
-void Device::submit(const float deltaTime) {
+void Device::submit() {
 	const CommandBuffer* commandBuffer;
 	uint64_t waitValue;
 	uint64_t signalValue;
 	vk::PipelineStageFlags waitStage;
 
 	if constexpr (T == QueueType::Compute) {
-		recordComputeCommandBuffer(deltaTime);
+		recordComputeCommandBuffer();
+
 		commandBuffer = &mComputeCommandBuffers[mFrameIndex];
 		waitValue = mComputeWaitValue;
 		signalValue = mComputeSignalValue;
 		waitStage = vk::PipelineStageFlagBits::eComputeShader;
 	} else {
 		recordGraphicsCommandBuffer(mImageIndex);
+		
 		commandBuffer = &mGraphicsCommandBuffers[mFrameIndex];
 		waitValue = mGraphicsWaitValue;
 		signalValue = mGraphicsSignalValue;
-		waitStage = vk::PipelineStageFlagBits::eVertexInput;
+		waitStage = vk::PipelineStageFlagBits::eFragmentShader;
 	}
 
 	vk::TimelineSemaphoreSubmitInfo timelineInfo{

@@ -85,7 +85,8 @@ public:
 	GraphicsPipeline(PipelineBuilder& builder,
 	                 Shader& shader,
 	                 vk::SurfaceFormatKHR& surfaceFormat,
-	                 const VertexLayout& layout);
+	                 DescriptorSetLayout& dscSetLayout,
+	                 uint32_t dscSetLayoutCount);
 };
 
 class ComputePipeline : public Pipeline {

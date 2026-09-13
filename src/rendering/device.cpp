@@ -18,6 +18,7 @@
 #include "descriptorSet.hpp"
 #include "deviceExtension.hpp"
 #include "image.hpp"
+#include "memory.hpp"
 #include "pipelineBuilder.hpp"
 #include "validation.hpp"
 #include "../core/window.hpp"
@@ -39,9 +40,11 @@ void Device::init() {
 		createDescriptorSetLayout();
 		createPipelines();
 		createCommandPool();
-		createShaderStorageBuffers();
+		createShaderStorageImage();
+		createSampler();
 		createDescriptorPool();
 		createComputeDescriptorSets();
+		createGraphicsDescriptorSets();
 		createCommandBuffers();
 		createSyncObjects();
 	} catch (const std::runtime_error& e) {
@@ -122,7 +125,7 @@ void Device::getPhysicalDevice() {
 
 void Device::createInstance() {
 	constexpr vk::ApplicationInfo appInfo{
-		.pApplicationName = "Particle Simulation",
+		.pApplicationName = "Vk Tracer",
 		.applicationVersion = VK_MAKE_VERSION(1, 0, 0),
 		.pEngineName = "No Engine",
 		.engineVersion = VK_MAKE_VERSION(1, 0, 0),
@@ -230,10 +233,12 @@ void Device::createLogicalDevice() {
 	// Create a chain of feature structures
 	const vk::StructureChain<
 		vk::PhysicalDeviceFeatures2,
+		vk::PhysicalDeviceVulkan11Features,
 		vk::PhysicalDeviceVulkan13Features,
 		vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT,
 		vk::PhysicalDeviceTimelineSemaphoreFeaturesKHR> featureChain = {
 		{.features = {.samplerAnisotropy = true}},
+		{.shaderDrawParameters = true},
 		{.synchronization2 = true, .dynamicRendering = true},
 		{.extendedDynamicState = true},
 		{.timelineSemaphore = true}
@@ -264,8 +269,21 @@ void Device::createSwapchain() {
 
 void Device::createDescriptorSetLayout() {
 	mComputeDescriptorSetLayout = DescriptorSetLayout(mDevice);
-	mComputeDescriptorSetLayout.addBinding(0, vk::DescriptorType::eStorageBuffer, 1, vk::ShaderStageFlagBits::eCompute)
-			.addBinding(1, vk::DescriptorType::eStorageBuffer, 1, vk::ShaderStageFlagBits::eCompute)
+	mComputeDescriptorSetLayout
+			.addBinding(
+				0,
+				vk::DescriptorType::eStorageImage,
+				1,
+				vk::ShaderStageFlagBits::eCompute)
+			.build();
+
+	mGraphicsDescriptorSetLayout = DescriptorSetLayout(mDevice);
+	mGraphicsDescriptorSetLayout
+			.addBinding(
+				0,
+				vk::DescriptorType::eCombinedImageSampler,
+				1,
+				vk::ShaderStageFlagBits::eFragment)
 			.build();
 }
 
@@ -273,9 +291,12 @@ void Device::createPipelines() {
 	PipelineBuilder builder{mDevice};
 	Shader shader{mDevice, std::string(SHADER_BINARY_DIR) + SHADER_NAME};
 
-	mGraphicsPipeline = GraphicsPipeline(builder, shader, mSwapchain.surfaceFormat(), Particle::layout());
-
-	builder.reset();
+	mGraphicsPipeline = GraphicsPipeline(
+		builder,
+		shader,
+		mSwapchain.surfaceFormat(),
+		mGraphicsDescriptorSetLayout,
+		1);
 
 	mComputePipeline = ComputePipeline(
 		builder,
@@ -294,46 +315,84 @@ void Device::createCommandPool() {
 
 void Device::createDescriptorPool() {
 	mDescriptorPool = DescriptorPool(mDevice);
-	mDescriptorPool.addMaxSets(MAX_FRAMES_IN_FLIGHT)
+	mDescriptorPool
+			.addMaxSets(MAX_FRAMES_IN_FLIGHT * 2)
 			.addPoolFlags(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet)
-			.addPoolSize(vk::DescriptorType::eUniformBuffer, MAX_FRAMES_IN_FLIGHT)
-			.addPoolSize(vk::DescriptorType::eStorageBuffer, MAX_FRAMES_IN_FLIGHT * 2)
+			.addPoolSize(vk::DescriptorType::eStorageImage, MAX_FRAMES_IN_FLIGHT)
+			.addPoolSize(vk::DescriptorType::eCombinedImageSampler, MAX_FRAMES_IN_FLIGHT)
 			.build();
 }
 
-void Device::createShaderStorageBuffers() {
-	const auto particles = Particle::generate(PARTICLE_COUNT, WIDTH, HEIGHT);
-	constexpr vk::DeviceSize bufferSize = sizeof(Particle) * PARTICLE_COUNT;
+void Device::createShaderStorageImage() {
+	mShaderStorageImages.clear();
+	mShaderStorageImageMemory.clear();
+	mShaderStorageImageViews.clear();
 
-	// Create a staging buffer used to upload data to the gpu
-	Buffer stagingBuffer{
-		bufferSize,
-		mDevice,
-		mPhysicalDevice,
-		vk::BufferUsageFlagBits::eTransferSrc,
-		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
+	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+		vk::ImageCreateInfo imageInfo{};
+		imageInfo.imageType = vk::ImageType::e2D;
+		imageInfo.format = vk::Format::eR8G8B8A8Unorm;
+		imageInfo.extent = vk::Extent3D{
+			.width = WIDTH,
+			.height = HEIGHT,
+			.depth = 1
+		};
+		imageInfo.mipLevels = 1;
+		imageInfo.arrayLayers = 1;
+		imageInfo.samples = vk::SampleCountFlagBits::e1;
+		imageInfo.tiling = vk::ImageTiling::eOptimal;
+		imageInfo.usage = vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled;
+		imageInfo.initialLayout = vk::ImageLayout::eUndefined;
+
+		mShaderStorageImages.emplace_back(mDevice, imageInfo);
+		auto& image = mShaderStorageImages.back();
+
+		const vk::MemoryRequirements memRequirements = image.getMemoryRequirements();
+
+		mShaderStorageImageMemory.emplace_back(mDevice,
+			mPhysicalDevice,
+			memRequirements.size,
+			memRequirements.memoryTypeBits,
+			vk::MemoryPropertyFlagBits::eDeviceLocal);
+
+		auto& memory = mShaderStorageImageMemory.back();
+		image.bindMemory(*memory, 0);
+
+		vk::ImageViewCreateInfo viewInfo{};
+		viewInfo.image = image;
+		viewInfo.viewType = vk::ImageViewType::e2D;
+		viewInfo.format = vk::Format::eR8G8B8A8Unorm;
+
+		viewInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+
+		viewInfo.subresourceRange.baseMipLevel = 0;
+		viewInfo.subresourceRange.levelCount = 1;
+		viewInfo.subresourceRange.baseArrayLayer = 0;
+		viewInfo.subresourceRange.layerCount = 1;
+
+		mShaderStorageImageViews.emplace_back(mDevice, viewInfo);
+	}
+}
+
+void Device::createSampler() {
+	constexpr vk::SamplerCreateInfo samplerInfo{
+		.magFilter = vk::Filter::eLinear,
+		.minFilter = vk::Filter::eLinear,
+		.mipmapMode = vk::SamplerMipmapMode::eNearest,
+		.addressModeU = vk::SamplerAddressMode::eClampToEdge,
+		.addressModeV = vk::SamplerAddressMode::eClampToEdge,
+		.addressModeW = vk::SamplerAddressMode::eClampToEdge,
+		.mipLodBias = 0.0f,
+		.anisotropyEnable = vk::False,
+		.maxAnisotropy = 1.0f,
+		.compareEnable = vk::False,
+		.compareOp = vk::CompareOp::eAlways,
+		.minLod = 0.0f,
+		.maxLod = 0.0f
 	};
 
-	void* mem = stagingBuffer.map(bufferSize);
-	memcpy(mem, particles.data(), bufferSize);
-	stagingBuffer.unmap();
-
-	mShaderStorageBuffers.clear();
-
-	// Copy initial particle data to all storage buffers
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
-		Buffer ssbo{
-			bufferSize,
-			mDevice,
-			mPhysicalDevice,
-			vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eVertexBuffer |
-			vk::BufferUsageFlagBits::eTransferDst,
-			vk::MemoryPropertyFlagBits::eDeviceLocal
-		};
-
-		copyBuffer(ssbo, stagingBuffer, bufferSize);
-
-		mShaderStorageBuffers.emplace_back(std::move(ssbo));
+		mSamplers.emplace_back(mDevice, samplerInfo);
 	}
 }
 
@@ -342,25 +401,35 @@ void Device::createComputeDescriptorSets() {
 	mComputeDescriptorSets = allocator.allocate(MAX_FRAMES_IN_FLIGHT, **mComputeDescriptorSetLayout);
 
 	DescriptorSetWriter writer(mDevice);
-	writer.reserve(MAX_FRAMES_IN_FLIGHT * 2);
-
-	constexpr vk::DeviceSize bufferSize = sizeof(Particle) * PARTICLE_COUNT;
+	writer.reserve(MAX_FRAMES_IN_FLIGHT);
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
-		writer.writeBuffer(
-					*mComputeDescriptorSets[i],
-					0,
-					vk::DescriptorType::eStorageBuffer,
-					**mShaderStorageBuffers[(i + MAX_FRAMES_IN_FLIGHT - 1) % MAX_FRAMES_IN_FLIGHT],
-					0,
-					bufferSize)
-				.writeBuffer(
-					*mComputeDescriptorSets[i],
-					1,
-					vk::DescriptorType::eStorageBuffer,
-					**mShaderStorageBuffers[i],
-					0,
-					bufferSize);
+		writer.writeImage(
+			*mComputeDescriptorSets[i],
+			0,
+			vk::DescriptorType::eStorageImage,
+			mShaderStorageImageViews[i],
+			vk::ImageLayout::eGeneral);
+
+		writer.update();
+	}
+}
+
+void Device::createGraphicsDescriptorSets() {
+	const DescriptorSetAllocator allocator(mDevice, mDescriptorPool);
+	mGraphicsDescriptorSets = allocator.allocate(MAX_FRAMES_IN_FLIGHT, **mGraphicsDescriptorSetLayout);
+
+	DescriptorSetWriter writer(mDevice);
+	writer.reserve(MAX_FRAMES_IN_FLIGHT);
+
+	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+		writer.writeImage(
+			*mGraphicsDescriptorSets[i],
+			0,
+			vk::DescriptorType::eCombinedImageSampler,
+			mShaderStorageImageViews[i],
+			vk::ImageLayout::eShaderReadOnlyOptimal,
+			mSamplers[i]);
 
 		writer.update();
 	}
@@ -413,6 +482,12 @@ void Device::recordGraphicsCommandBuffer(const uint32_t imageIndex) {
 
 	(*commandBuffer).beginRendering(renderingInfo);
 	(*commandBuffer).bindPipeline(vk::PipelineBindPoint::eGraphics, **mGraphicsPipeline);
+	(*commandBuffer).bindDescriptorSets(
+		vk::PipelineBindPoint::eGraphics,
+		mGraphicsPipeline.layout(),
+		0,
+		{mGraphicsDescriptorSets[mFrameIndex]},
+		{});
 	(*commandBuffer).setViewport(
 		0,
 		vk::Viewport(
@@ -423,8 +498,7 @@ void Device::recordGraphicsCommandBuffer(const uint32_t imageIndex) {
 			0.0f,
 			1.0f));
 	(*commandBuffer).setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), mSwapchain.extent()));
-	(*commandBuffer).bindVertexBuffers(0, {*mShaderStorageBuffers[mFrameIndex]}, {0});
-	(*commandBuffer).draw(PARTICLE_COUNT, 1, 0, 0);
+	(*commandBuffer).draw(3, 1, 0, 0);
 	(*commandBuffer).endRendering();
 	// After rendering, transition the swapchain image to PRESENT_SRC
 	image::transitionImageLayout(
@@ -440,10 +514,37 @@ void Device::recordGraphicsCommandBuffer(const uint32_t imageIndex) {
 	(*commandBuffer).end();
 }
 
-void Device::recordComputeCommandBuffer(const float deltaTime) {
+void Device::recordComputeCommandBuffer() {
 	const auto& commandBuffer = mComputeCommandBuffers[mFrameIndex];
 	(*commandBuffer).reset();
 	(*commandBuffer).begin({});
+
+	const vk::ImageMemoryBarrier2 barrier{
+		.srcStageMask = vk::PipelineStageFlagBits2::eTopOfPipe,
+		.srcAccessMask = {},
+		.dstStageMask = vk::PipelineStageFlagBits2::eComputeShader,
+		.dstAccessMask = vk::AccessFlagBits2::eShaderWrite,
+		.oldLayout = vk::ImageLayout::eUndefined,
+		.newLayout = vk::ImageLayout::eGeneral,
+		.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+		.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+		.image = mShaderStorageImages[mFrameIndex],
+		.subresourceRange = {
+			.aspectMask = vk::ImageAspectFlagBits::eColor,
+			.baseMipLevel = 0,
+			.levelCount = 1,
+			.baseArrayLayer = 0,
+			.layerCount = 1
+		}
+	};
+
+	const vk::DependencyInfo dependencyInfo{
+		.imageMemoryBarrierCount = 1,
+		.pImageMemoryBarriers = &barrier
+	};
+
+	(*commandBuffer).pipelineBarrier2(dependencyInfo);
+
 	(*commandBuffer).bindPipeline(vk::PipelineBindPoint::eCompute, **mComputePipeline);
 	(*commandBuffer).bindDescriptorSets(
 		vk::PipelineBindPoint::eCompute,
@@ -451,8 +552,9 @@ void Device::recordComputeCommandBuffer(const float deltaTime) {
 		0,
 		{mComputeDescriptorSets[mFrameIndex]}, {});
 
-	const ComputePushConstants pc{
-		.deltaTime = deltaTime,
+	constexpr ComputePushConstants pc{
+		.width = WIDTH,
+		.height = HEIGHT,
 	};
 
 	(*commandBuffer).pushConstants(
@@ -460,7 +562,34 @@ void Device::recordComputeCommandBuffer(const float deltaTime) {
 		vk::ShaderStageFlagBits::eCompute,
 		0,
 		vk::ArrayProxy<const ComputePushConstants>(pc));
-	(*commandBuffer).dispatch((PARTICLE_COUNT + THREADS_PER_GROUP - 1) / THREADS_PER_GROUP, 1, 1);
+	(*commandBuffer).dispatch(256 / 8, 256 / 8, 1);
+
+	const vk::ImageMemoryBarrier2 barrier1{
+		.srcStageMask = vk::PipelineStageFlagBits2::eComputeShader,
+		.srcAccessMask = vk::AccessFlagBits2::eShaderWrite,
+		.dstStageMask = vk::PipelineStageFlagBits2::eFragmentShader,
+		.dstAccessMask = vk::AccessFlagBits2::eShaderSampledRead,
+		.oldLayout = vk::ImageLayout::eGeneral,
+		.newLayout = vk::ImageLayout::eShaderReadOnlyOptimal,
+		.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+		.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+		.image = mShaderStorageImages[mFrameIndex],
+		.subresourceRange = {
+			.aspectMask = vk::ImageAspectFlagBits::eColor,
+			.baseMipLevel = 0,
+			.levelCount = 1,
+			.baseArrayLayer = 0,
+			.layerCount = 1
+		}
+	};
+
+	const vk::DependencyInfo dependencyInfo1{
+		.imageMemoryBarrierCount = 1,
+		.pImageMemoryBarriers = &barrier1
+	};
+
+	(*commandBuffer).pipelineBarrier2(dependencyInfo1);
+
 	(*commandBuffer).end();
 }
 

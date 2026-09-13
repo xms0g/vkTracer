@@ -19,21 +19,22 @@ vk::raii::DescriptorSets DescriptorSetAllocator::allocate(const uint32_t count,
 	return mDevice.allocateDescriptorSets(allocInfo);
 }
 
-DescriptorSetWriter::DescriptorSetWriter(const vk::raii::Device& device) : mDevice(device) {
+DescriptorSetWriter::DescriptorSetWriter(const vk::raii::Device& device)
+	: mDevice(device) {
 }
 
 void DescriptorSetWriter::reserve(const uint32_t count) {
 	mBufferInfos.reserve(count);
+	mImageInfos.reserve(count);
 	mWrites.reserve(count);
 }
 
-DescriptorSetWriter& DescriptorSetWriter::writeBuffer(
-	const vk::DescriptorSet set,
-	const uint32_t binding,
-	const vk::DescriptorType type,
-	const vk::Buffer buffer,
-	const vk::DeviceSize offset,
-	const vk::DeviceSize range) {
+DescriptorSetWriter& DescriptorSetWriter::writeBuffer(const vk::DescriptorSet set,
+                                                      const uint32_t binding,
+                                                      const vk::DescriptorType type,
+                                                      const vk::Buffer buffer,
+                                                      const vk::DeviceSize offset,
+                                                      const vk::DeviceSize range) {
 	mBufferInfos.emplace_back(vk::DescriptorBufferInfo{
 		.buffer = buffer,
 		.offset = offset,
@@ -51,6 +52,29 @@ DescriptorSetWriter& DescriptorSetWriter::writeBuffer(
 	return *this;
 }
 
+DescriptorSetWriter& DescriptorSetWriter::writeImage(const vk::DescriptorSet set,
+                                                     const uint32_t binding,
+                                                     const vk::DescriptorType type,
+                                                     const vk::ImageView image,
+                                                     const vk::ImageLayout layout,
+                                                     const vk::Sampler sampler) {
+	mImageInfos.emplace_back(vk::DescriptorImageInfo{
+		.sampler = sampler,
+		.imageView = image,
+		.imageLayout = layout
+	});
+
+	mWrites.emplace_back(vk::WriteDescriptorSet{
+		.dstSet = set,
+		.dstBinding = binding,
+		.descriptorCount = 1,
+		.descriptorType = type,
+		.pImageInfo = &mImageInfos.back()
+	});
+
+	return *this;
+}
+
 void DescriptorSetWriter::update() {
 	mDevice.updateDescriptorSets(mWrites, nullptr);
 	flush();
@@ -58,5 +82,6 @@ void DescriptorSetWriter::update() {
 
 void DescriptorSetWriter::flush() {
 	mBufferInfos.clear();
+	mImageInfos.clear();
 	mWrites.clear();
 }

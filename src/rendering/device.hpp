@@ -8,6 +8,8 @@
 #include "pipelineBuilder.hpp"
 #include "swapchain.hpp"
 
+class DeviceMemory;
+
 enum class QueueType { Graphics, Compute };
 
 class Window;
@@ -24,7 +26,7 @@ public:
 	void prepareFrame();
 
 	template<QueueType T>
-	void submit(float deltaTime);
+	void submit();
 
 	void presentFrame();
 
@@ -52,15 +54,19 @@ private:
 
 	void createDescriptorPool();
 
-	void createShaderStorageBuffers();
+	void createShaderStorageImage();
+
+	void createSampler();
 
 	void createComputeDescriptorSets();
+
+	void createGraphicsDescriptorSets();
 
 	void createCommandBuffers();
 
 	void recordGraphicsCommandBuffer(uint32_t imageIndex);
 
-	void recordComputeCommandBuffer(float deltaTime);
+	void recordComputeCommandBuffer();
 
 	void createSyncObjects();
 
@@ -82,7 +88,8 @@ private:
 	void endSingleTimeCommands(const vk::raii::CommandBuffer& commandBuffer) const;
 
 	struct ComputePushConstants {
-		float deltaTime{1.0f};
+		uint32_t width;
+		uint32_t height;
 	};
 
 	Window& mWindow;
@@ -102,11 +109,17 @@ private:
 	vk::raii::SurfaceKHR mSurface{nullptr};
 	Swapchain mSwapchain{};
 	DescriptorSetLayout mComputeDescriptorSetLayout{};
+	DescriptorSetLayout mGraphicsDescriptorSetLayout{};
 	DescriptorPool mDescriptorPool{};
 	std::vector<vk::raii::DescriptorSet> mComputeDescriptorSets;
+	std::vector<vk::raii::DescriptorSet> mGraphicsDescriptorSets;
 	GraphicsPipeline mGraphicsPipeline{};
 	ComputePipeline mComputePipeline{};
-	std::vector<Buffer> mShaderStorageBuffers;
+	std::vector<Buffer> mShaderStorageBuffers; // remove
+	std::vector<vk::raii::Image> mShaderStorageImages;
+	std::vector<DeviceMemory> mShaderStorageImageMemory;
+	std::vector<vk::raii::ImageView> mShaderStorageImageViews;
+	std::vector<vk::raii::Sampler> mSamplers;
 	CommandPool mCommandPool;
 	std::vector<CommandBuffer> mGraphicsCommandBuffers;
 	std::vector<CommandBuffer> mComputeCommandBuffers;

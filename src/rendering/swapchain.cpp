@@ -25,6 +25,7 @@ vk::Extent2D& Swapchain::extent() {
 
 uint32_t Swapchain::acquireNextImage(const vk::raii::Fence& fence) const {
 	auto [result, imageIndex] = mSwapChain.acquireNextImage(UINT64_MAX, nullptr, fence);
+
 	if (result != vk::Result::eSuccess) {
 		throw std::runtime_error("Failed to acquire swap chain image!");
 	}

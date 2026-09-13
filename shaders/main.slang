@@ -1,91 +1,60 @@
-struct VSInput {
-    float2 inPosition;
-    float4 inColor;
-};
-
 struct VSOutput {
     float4 pos : SV_Position;
-    float pointSize : SV_PointSize;
-    float3 fragColor : COLOR0;
+    float2 uv  : TEXCOORD0;
 };
-
-struct PSInput {
-    float4 pos : SV_POSITION;
-    float3 fragColor : COLOR0;
-    float2 pointCoord : SV_PointCoord;
-};
-
-static const float POINT_SIZE = 14.0;
 
 [shader("vertex")]
-VSOutput vertMain(VSInput input) {
+VSOutput vertMain(uint vertexId : SV_VertexID) {
     VSOutput output;
-    output.pointSize = POINT_SIZE;
-    output.pos = float4(input.inPosition, 1.0, 1.0);
-    output.fragColor = input.inColor.rgb;
+
+    float2 positions[3] = {
+          float2(-1.0, -1.0),
+          float2( 3.0, -1.0),
+          float2(-1.0,  3.0)
+    };
+
+    float2 uvs[3] = {
+          float2(0.0, 0.0),
+          float2(2.0, 0.0),
+          float2(0.0, 2.0)
+    };
+
+    output.pos = float4(positions[vertexId], 0.0, 1.0);
+    output.uv = uvs[vertexId];
+
     return output;
 }
 
+[[vk::binding(0, 0)]]
+Sampler2D pixels;
+
 [shader("fragment")]
-float4 fragMain(PSInput input) : SV_TARGET {
-    float2 coord = input.pointCoord - float2(0.5);
-    return float4(input.fragColor, 0.5 - length(coord));
+float4 fragMain(VSOutput input) : SV_TARGET {
+    return pixels.Sample(input.uv);
 }
 
+[[vk::binding(0, 0)]]
+RWTexture2D<float4> pixelsOut;
+
 struct PushConstants {
-    float deltaTime;
-};
-[[vk::push_constant]] PushConstants pc;
-
-struct Particle {
-	float2 position;
-	float2 velocity;
-    float4 color;
+    uint width;
+    uint height;
 };
 
-static const float2 GRAVITY = float2(0.0, 0.5);
-
-[[vk::binding(0, 0)]] StructuredBuffer<Particle> particlesIn;
-[[vk::binding(1, 0)]] RWStructuredBuffer<Particle> particlesOut;
+[[vk::push_constant]]
+PushConstants pc;
 
 [shader("compute")]
-[numthreads(256,1,1)]
+[numthreads(8,8,1)]
 void compMain(uint3 threadId : SV_DispatchThreadID) {
-    uint index = threadId.x;
+    uint2 pixel = threadId.xy;
 
-    uint count;
-    uint stride;
-
-    particlesIn.GetDimensions(count, stride);
-
-    if (index >= count) {
+    if (pixel.x >= pc.width || pixel.y >= pc.height)
         return;
-    }
 
-    Particle p = particlesIn[index];
+    float r = float(pixel.x) / float(pc.width - 1);
+    float g = float(pixel.y) / float(pc.height - 1);
+    float b = 0.0;
 
-    // Integrate velocity
-    p.velocity += GRAVITY * pc.deltaTime;
-    // Integrate position
-    p.position += p.velocity * pc.deltaTime;
-
-    // Bounce on X borders
-    if (p.position.x <= -1.0) {
-        p.position.x = -1.0;
-        p.velocity.x *= -0.8;
-    } else if (p.position.x >= 1.0) {
-        p.position.x = 1.0;
-        p.velocity.x *= -0.8;
-    }
-
-    // Bounce on Y borders
-    if (p.position.y <= -1.0) {
-        p.position.y = -1.0;
-        p.velocity.y *= -0.8;
-    } else if (p.position.y >= 1.0) {
-        p.position.y = 1.0;
-        p.velocity.y *= -0.8;
-    }
-
-    particlesOut[index] = p;
+    pixelsOut[pixel] = float4(r, g, b, 1.0);
 }
