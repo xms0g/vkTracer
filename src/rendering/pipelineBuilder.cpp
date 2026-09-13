@@ -74,7 +74,7 @@ PipelineBuilder& PipelineBuilder::rasterizer() {
 		.depthClampEnable = vk::False,
 		.rasterizerDiscardEnable = vk::False,
 		.polygonMode = vk::PolygonMode::eFill,
-		.cullMode = vk::CullModeFlagBits::eBack,
+		.cullMode = vk::CullModeFlagBits::eNone,
 		.frontFace = vk::FrontFace::eCounterClockwise,
 		.depthBiasEnable = vk::False,
 		.lineWidth = 1.0f
@@ -180,20 +180,27 @@ vk::raii::Pipeline PipelineBuilder::buildCompute(const vk::raii::PipelineLayout&
 	return {mDevice, nullptr, pipelineInfo};
 }
 
-GraphicsPipeline::GraphicsPipeline(PipelineBuilder& builder, Shader& shader,
+GraphicsPipeline::GraphicsPipeline(PipelineBuilder& builder,
+                                   Shader& shader,
                                    vk::SurfaceFormatKHR& surfaceFormat,
-                                   const VertexLayout& layout) {
+                                   DescriptorSetLayout& dscSetLayout,
+                                   const uint32_t dscSetLayoutCount) {
+	builder.reset();
 	builder.addVertexShader(shader, "vertMain")
 			.addFragmentShader(shader, "fragMain")
-			.vertexInput(layout)
-			.topology(vk::PrimitiveTopology::ePointList)
+			.topology(vk::PrimitiveTopology::eTriangleList)
 			.viewportState(1, 1)
 			.dynamicStates<vk::DynamicState::eViewport, vk::DynamicState::eScissor>()
 			.rasterizer()
 			.multisampling()
 			.alphaBlending();
 
-	mPipelineLayout = builder.createPipelineLayout();
+	mPipelineLayout = builder.createPipelineLayout(
+		&**dscSetLayout,
+		dscSetLayoutCount,
+		0,
+		vk::ShaderStageFlagBits::eFragment);
+
 	mPipeline = builder.buildGraphics(surfaceFormat, mPipelineLayout);
 }
 
@@ -202,6 +209,7 @@ ComputePipeline::ComputePipeline(PipelineBuilder& builder,
                                  DescriptorSetLayout& dscSetLayout,
                                  const uint32_t dscSetLayoutCount,
                                  const uint32_t pushConstantSize) {
+	builder.reset();
 	builder.addComputeShader(shader, "compMain");
 
 	mPipelineLayout = builder.createPipelineLayout(

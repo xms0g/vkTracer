@@ -30,6 +30,13 @@ public:
 	                                 vk::DeviceSize offset,
 	                                 vk::DeviceSize range);
 
+	DescriptorSetWriter& writeImage(vk::DescriptorSet set,
+	                                uint32_t binding,
+	                                vk::DescriptorType type,
+	                                vk::ImageView image,
+	                                vk::ImageLayout layout,
+	                                vk::Sampler sampler = nullptr);
+
 	void update();
 
 	void flush();
@@ -37,5 +44,6 @@ public:
 private:
 	std::vector<vk::WriteDescriptorSet> mWrites;
 	std::vector<vk::DescriptorBufferInfo> mBufferInfos;
+	std::vector<vk::DescriptorImageInfo> mImageInfos;
 	const vk::raii::Device& mDevice;
 };
