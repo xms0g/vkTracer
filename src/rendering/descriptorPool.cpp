@@ -1,6 +1,7 @@
-#include "descriptorPool.h"
+#include "descriptorPool.hpp"
 
-DescriptorPool::DescriptorPool(const vk::raii::Device& device) : mDevice(&device) {
+DescriptorPool::DescriptorPool(const vk::raii::Device& device)
+	: mDevice(&device) {
 }
 
 DescriptorPool& DescriptorPool::addMaxSets(const uint32_t count) {

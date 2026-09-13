@@ -1,11 +1,10 @@
-#include "buffer.h"
+#include "buffer.hpp"
 
-Buffer::Buffer(
-	const vk::DeviceSize size,
-	const vk::raii::Device& device,
-	const vk::raii::PhysicalDevice& phyDev,
-	const vk::BufferUsageFlags usage,
-	const vk::MemoryPropertyFlags properties)
+Buffer::Buffer(const vk::DeviceSize size,
+               const vk::raii::Device& device,
+               const vk::raii::PhysicalDevice& phyDev,
+               const vk::BufferUsageFlags usage,
+               const vk::MemoryPropertyFlags properties)
 	: mSize(size) {
 	const vk::BufferCreateInfo bufferInfo{
 		.size = size, .usage = usage, .sharingMode = vk::SharingMode::eExclusive
@@ -40,10 +39,9 @@ void Buffer::unmap() const {
 	mBufferMemory.unmapMemory();
 }
 
-uint32_t Buffer::findMemoryType(
-	const uint32_t typeFilter,
-	const vk::MemoryPropertyFlags properties,
-	const vk::raii::PhysicalDevice& phyDev) {
+uint32_t Buffer::findMemoryType(const uint32_t typeFilter,
+                                const vk::MemoryPropertyFlags properties,
+                                const vk::raii::PhysicalDevice& phyDev) {
 	const vk::PhysicalDeviceMemoryProperties memProperties = phyDev.getMemoryProperties();
 
 	for (uint32_t i = 0; i < memProperties.memoryTypeCount; ++i) {

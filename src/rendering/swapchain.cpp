@@ -1,10 +1,9 @@
-#include "swapchain.h"
+#include "swapchain.hpp"
 
-Swapchain::Swapchain(
-	const vk::raii::SurfaceKHR& surface,
-	const vk::raii::Device& device,
-	const vk::raii::PhysicalDevice& phyDev,
-	GLFWwindow& window) {
+Swapchain::Swapchain(const vk::raii::SurfaceKHR& surface,
+                     const vk::raii::Device& device,
+                     const vk::raii::PhysicalDevice& phyDev,
+                     GLFWwindow& window) {
 	create(surface, device, phyDev, window);
 }
 
@@ -25,7 +24,7 @@ vk::Extent2D& Swapchain::extent() {
 }
 
 uint32_t Swapchain::acquireNextImage(const vk::raii::Fence& fence) const {
-	auto [result, imageIndex] = mSwapChain.acquireNextImage(UINT64_MAX,nullptr, fence);
+	auto [result, imageIndex] = mSwapChain.acquireNextImage(UINT64_MAX, nullptr, fence);
 	if (result != vk::Result::eSuccess) {
 		throw std::runtime_error("Failed to acquire swap chain image!");
 	}
@@ -33,11 +32,10 @@ uint32_t Swapchain::acquireNextImage(const vk::raii::Fence& fence) const {
 	return imageIndex;
 }
 
-void Swapchain::recreate(
-	const vk::raii::SurfaceKHR& surface,
-	const vk::raii::Device& device,
-	const vk::raii::PhysicalDevice& phyDev,
-	GLFWwindow& window) {
+void Swapchain::recreate(const vk::raii::SurfaceKHR& surface,
+                         const vk::raii::Device& device,
+                         const vk::raii::PhysicalDevice& phyDev,
+                         GLFWwindow& window) {
 	device.waitIdle();
 
 	mSwapChainImageViews.clear();
@@ -47,11 +45,10 @@ void Swapchain::recreate(
 	createSwapchainImageViews(device);
 }
 
-void Swapchain::create(
-	const vk::raii::SurfaceKHR& surface,
-	const vk::raii::Device& device,
-	const vk::raii::PhysicalDevice& phyDev,
-	GLFWwindow& window) {
+void Swapchain::create(const vk::raii::SurfaceKHR& surface,
+                       const vk::raii::Device& device,
+                       const vk::raii::PhysicalDevice& phyDev,
+                       GLFWwindow& window) {
 	const vk::SurfaceCapabilitiesKHR surfaceCapabilities = phyDev.getSurfaceCapabilitiesKHR(surface);
 	mSwapChainExtent = chooseSwapExtent(surfaceCapabilities, window);
 	const uint32_t minImageCount = chooseSwapMinImageCount(surfaceCapabilities);

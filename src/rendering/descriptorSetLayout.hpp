@@ -9,11 +9,10 @@ public:
 
 	explicit DescriptorSetLayout(const vk::raii::Device& device);
 
-	DescriptorSetLayout& addBinding(
-		uint32_t binding,
-		vk::DescriptorType type,
-		uint32_t count = 1,
-		vk::ShaderStageFlags stageFlags = vk::ShaderStageFlagBits::eAll);
+	DescriptorSetLayout& addBinding(uint32_t binding,
+	                                vk::DescriptorType type,
+	                                uint32_t count = 1,
+	                                vk::ShaderStageFlags stageFlags = vk::ShaderStageFlagBits::eAll);
 
 	void build();
 
@@ -21,7 +20,7 @@ public:
 	const vk::raii::DescriptorSetLayout& operator*() const noexcept { return mDescriptorSetLayout; }
 
 private:
-	const vk::raii::Device* mDevice;
+	const vk::raii::Device* mDevice{nullptr};
 	std::vector<vk::DescriptorSetLayoutBinding> mBindings;
 	vk::raii::DescriptorSetLayout mDescriptorSetLayout{nullptr};
 };

@@ -1,7 +1,7 @@
 #pragma once
 #include <array>
 
-constexpr std::array<const char*, 1> validationLayers = {
+constexpr std::array validationLayers = {
         "VK_LAYER_KHRONOS_validation"
 };
 

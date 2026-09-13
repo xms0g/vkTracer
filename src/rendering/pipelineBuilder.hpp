@@ -2,7 +2,7 @@
 #define VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
 #include <vulkan/vulkan_raii.hpp>
 #include "vertex.hpp"
-#include "shader.h"
+#include "shader.hpp"
 
 class DescriptorSetLayout;
 class Swapchain;
@@ -38,11 +38,10 @@ public:
 
 	PipelineBuilder& alphaBlending();
 
-	vk::raii::PipelineLayout createPipelineLayout(
-		const vk::DescriptorSetLayout* dscSetLayout = nullptr,
-		uint32_t dscSetLayoutCount = 0,
-		uint32_t pushConstantSize = 0,
-		vk::ShaderStageFlags stages = {}) const;
+	vk::raii::PipelineLayout createPipelineLayout(const vk::DescriptorSetLayout* dscSetLayout = nullptr,
+	                                              uint32_t dscSetLayoutCount = 0,
+	                                              uint32_t pushConstantSize = 0,
+	                                              vk::ShaderStageFlags stages = {}) const;
 
 	vk::raii::Pipeline buildGraphics(vk::SurfaceFormatKHR& surfaceFormat, const vk::raii::PipelineLayout& layout);
 
@@ -63,17 +62,7 @@ private:
 	const vk::raii::Device& mDevice;
 };
 
-template<vk::DynamicState T>
-PipelineBuilder& PipelineBuilder::dynamicState() {
-	mDynamicStates.push_back(T);
-	return *this;
-}
-
-template<vk::DynamicState... States>
-PipelineBuilder& PipelineBuilder::dynamicStates() {
-	(mDynamicStates.push_back(States), ...);
-	return *this;
-}
+#include "pipelineBuilder.tpp"
 
 class Pipeline {
 public:
@@ -93,20 +82,19 @@ class GraphicsPipeline : public Pipeline {
 public:
 	GraphicsPipeline() = default;
 
-	GraphicsPipeline(PipelineBuilder& builder, Shader& shader, vk::SurfaceFormatKHR& surfaceFormat, const VertexLayout& layout);
-
-private:
-	VertexLayout mVertexLayout;
+	GraphicsPipeline(PipelineBuilder& builder,
+	                 Shader& shader,
+	                 vk::SurfaceFormatKHR& surfaceFormat,
+	                 const VertexLayout& layout);
 };
 
 class ComputePipeline : public Pipeline {
 public:
 	ComputePipeline() = default;
 
-	ComputePipeline(
-		PipelineBuilder& builder,
-		Shader& shader,
-		DescriptorSetLayout& dscSetLayout,
-		uint32_t dscSetLayoutCount,
-		uint32_t pushConstantSize);
+	ComputePipeline(PipelineBuilder& builder,
+	                Shader& shader,
+	                DescriptorSetLayout& dscSetLayout,
+	                uint32_t dscSetLayoutCount,
+	                uint32_t pushConstantSize);
 };

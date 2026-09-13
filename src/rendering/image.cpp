@@ -1,15 +1,14 @@
-#include "image.h"
-#include "commandBuffer.h"
+#include "image.hpp"
+#include "commandBuffer.hpp"
 
-void Image::transitionImageLayout(
-	const vk::Image image,
-	const vk::ImageLayout oldLayout,
-	const vk::ImageLayout newLayout,
-	const vk::AccessFlags2 srcAccessMask,
-	const vk::AccessFlags2 dstAccessMask,
-	const vk::PipelineStageFlags2 srcStageMask,
-	const vk::PipelineStageFlags2 dstStageMask,
-	const CommandBuffer& commandBuffer) {
+void image::transitionImageLayout(const vk::Image image,
+                                  const vk::ImageLayout oldLayout,
+                                  const vk::ImageLayout newLayout,
+                                  const vk::AccessFlags2 srcAccessMask,
+                                  const vk::AccessFlags2 dstAccessMask,
+                                  const vk::PipelineStageFlags2 srcStageMask,
+                                  const vk::PipelineStageFlags2 dstStageMask,
+                                  const CommandBuffer& commandBuffer) {
 	vk::ImageMemoryBarrier2 barrier = {
 		.srcStageMask = srcStageMask,
 		.srcAccessMask = srcAccessMask,

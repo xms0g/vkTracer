@@ -1,4 +1,4 @@
-#include "device.h"
+#include "device.hpp"
 #include <set>
 #include <algorithm>
 #include <filesystem>
@@ -11,16 +11,16 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include "particle.hpp"
-#include "buffer.h"
-#include "swapchain.h"
-#include "commandPool.h"
-#include "descriptorPool.h"
-#include "descriptorSet.h"
+#include "buffer.hpp"
+#include "swapchain.hpp"
+#include "commandPool.hpp"
+#include "descriptorPool.hpp"
+#include "descriptorSet.hpp"
 #include "deviceExtension.hpp"
-#include "image.h"
-#include "pipelineBuilder.h"
+#include "image.hpp"
+#include "pipelineBuilder.hpp"
 #include "validation.hpp"
-#include "../core/window.h"
+#include "../core/window.hpp"
 #include "../config/config.hpp"
 
 Device::Device(Window& window) : mWindow(window) {
@@ -383,7 +383,7 @@ void Device::recordGraphicsCommandBuffer(const uint32_t imageIndex) {
 
 	const auto& image = mSwapchain.image(imageIndex);
 	// Before starting rendering, transition the swapchain image to COLOR_ATTACHMENT_OPTIMAL
-	Image::transitionImageLayout(
+	image::transitionImageLayout(
 		image,
 		vk::ImageLayout::eUndefined,
 		vk::ImageLayout::eColorAttachmentOptimal,
@@ -427,7 +427,7 @@ void Device::recordGraphicsCommandBuffer(const uint32_t imageIndex) {
 	(*commandBuffer).draw(PARTICLE_COUNT, 1, 0, 0);
 	(*commandBuffer).endRendering();
 	// After rendering, transition the swapchain image to PRESENT_SRC
-	Image::transitionImageLayout(
+	image::transitionImageLayout(
 		image,
 		vk::ImageLayout::eColorAttachmentOptimal,
 		vk::ImageLayout::ePresentSrcKHR,
@@ -492,11 +492,10 @@ std::vector<const char*> Device::getRequiredInstanceExtensions() {
 	return extensions;
 }
 
-vk::Bool32 Device::debugCallback(
-	vk::DebugUtilsMessageSeverityFlagBitsEXT severity,
-	const vk::DebugUtilsMessageTypeFlagsEXT type,
-	const vk::DebugUtilsMessengerCallbackDataEXT* pCallbackData,
-	void* pUserData) {
+vk::Bool32 Device::debugCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT severity,
+                                 const vk::DebugUtilsMessageTypeFlagsEXT type,
+                                 const vk::DebugUtilsMessengerCallbackDataEXT* pCallbackData,
+                                 void* pUserData) {
 	std::cerr << "validation layer: type " << to_string(type) << " msg: " << pCallbackData->pMessage << std::endl;
 
 	return vk::False;
@@ -533,7 +532,8 @@ bool Device::checkDeviceSuitable(const vk::raii::PhysicalDevice& phyDevice) {
 	bool supportsShaderDrawParameters = features2.get<vk::PhysicalDeviceVulkan11Features>().shaderDrawParameters;
 	bool supportsDynamicRendering = features2.get<vk::PhysicalDeviceVulkan13Features>().dynamicRendering;
 	bool supportsSynchronization2 = features2.get<vk::PhysicalDeviceVulkan13Features>().synchronization2;
-	bool supportsExtendedDynamicState = features2.get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>().extendedDynamicState;
+	bool supportsExtendedDynamicState = features2.get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>().
+			extendedDynamicState;
 	bool supportsRequiredFeatures =
 			supportsSamplerAnisotropy &&
 			supportsShaderDrawParameters &&

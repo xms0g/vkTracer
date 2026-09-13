@@ -1,12 +1,14 @@
-#include "descriptorSet.h"
-#include "descriptorPool.h"
+#include "descriptorSet.hpp"
+#include "descriptorPool.hpp"
 
 DescriptorSetAllocator::DescriptorSetAllocator(const vk::raii::Device& device, const DescriptorPool& pool)
-	: mPool(pool), mDevice(device) {
+	: mPool(pool),
+	  mDevice(device) {
 }
 
-vk::raii::DescriptorSets DescriptorSetAllocator::allocate(const uint32_t count, const vk::DescriptorSetLayout& layout) const {
-	std::vector<vk::DescriptorSetLayout> layouts(count, layout);
+vk::raii::DescriptorSets DescriptorSetAllocator::allocate(const uint32_t count,
+                                                          const vk::DescriptorSetLayout& layout) const {
+	std::vector layouts(count, layout);
 
 	const vk::DescriptorSetAllocateInfo allocInfo{
 		.descriptorPool = **mPool,
@@ -33,10 +35,10 @@ DescriptorSetWriter& DescriptorSetWriter::writeBuffer(
 	const vk::DeviceSize offset,
 	const vk::DeviceSize range) {
 	mBufferInfos.emplace_back(vk::DescriptorBufferInfo{
-		 .buffer = buffer,
-		 .offset = offset,
-		 .range = range
-	 });
+		.buffer = buffer,
+		.offset = offset,
+		.range = range
+	});
 
 	mWrites.emplace_back(vk::WriteDescriptorSet{
 		.dstSet = set,

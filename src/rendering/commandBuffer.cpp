@@ -1,5 +1,5 @@
-#include "commandBuffer.h"
-#include "commandPool.h"
+#include "commandBuffer.hpp"
+#include "commandPool.hpp"
 
 CommandBuffer::CommandBuffer(const vk::raii::Device& device, const CommandPool& commandPool, const vk::CommandBufferLevel level) {
 	const vk::CommandBufferAllocateInfo allocInfo{

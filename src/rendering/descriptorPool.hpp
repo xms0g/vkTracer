@@ -22,7 +22,7 @@ public:
 
 private:
 	uint32_t mMaxSets{0};
-	const vk::raii::Device* mDevice;
+	const vk::raii::Device* mDevice{nullptr};
 	std::vector<vk::DescriptorPoolSize> mPoolSizes;
 	vk::DescriptorPoolCreateFlags mPoolFlags;
 	vk::raii::DescriptorPool mDescriptorPool{nullptr};

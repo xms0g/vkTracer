@@ -11,8 +11,8 @@ struct Particle {
 
 	static VertexLayout layout() {
 		return {
-			{0, sizeof(Particle), vk::VertexInputRate::eVertex},
-			{
+			.bindingDescription = {.binding = 0, .stride = sizeof(Particle), .inputRate = vk::VertexInputRate::eVertex},
+			.attributeDescriptions = {
 				vk::VertexInputAttributeDescription(0, 0, vk::Format::eR32G32Sfloat, offsetof(Particle, position)),
 				vk::VertexInputAttributeDescription(1, 0, vk::Format::eR32G32B32A32Sfloat, offsetof(Particle, color)),
 			}

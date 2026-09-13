@@ -1,5 +1,5 @@
-#include "shader.h"
-#include "../io/filesystem.h"
+#include "shader.hpp"
+#include "../io/filesystem.hpp"
 
 Shader::Shader(const vk::raii::Device& device, const std::string& path) {
 	const auto shaderCode = fs::readFile(path);
