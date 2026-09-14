@@ -44,6 +44,43 @@ struct PushConstants {
 [[vk::push_constant]]
 PushConstants pc;
 
+struct Ray {
+    float3 orig;
+    float3 dir;
+
+    __init() {}
+    __init(float3 o, float3 d) {
+        orig = o;
+        dir = d;
+    }
+
+    property float3 origin    { get { return orig; } }
+    property float3 direction { get { return dir; } }
+
+    float3 at(float t) {
+        return orig + t * dir;
+    }
+};
+
+bool hitSphere(float3 center, float radius, Ray ray) {
+    float3 oc = center - ray.origin;
+    float a = dot(ray.direction, ray.direction);
+    float b = -2.0 * dot(ray.direction, oc);
+    float c = dot(oc, oc) - radius * radius;
+    float discriminant = b * b - 4 * a * c;
+    return (discriminant >= 0);
+}
+
+float3 rayColor(Ray ray) {
+    if (hitSphere(float3(0, 0, -1), 0.5, ray)) {
+        return float3(1, 0, 0);
+    }
+    
+    float3 unitDir = normalize(ray.direction);
+    float a = 0.5 * (unitDir.y + 1.0);
+    return (1.0 - a) * float3(1.0, 1.0, 1.0) + a * float3(0.0, 0.7, 1.0);
+}
+
 [shader("compute")]
 [numthreads(8,8,1)]
 void compMain(uint3 threadId : SV_DispatchThreadID) {
@@ -52,9 +89,26 @@ void compMain(uint3 threadId : SV_DispatchThreadID) {
     if (pixel.x >= pc.width || pixel.y >= pc.height)
         return;
 
-    float r = float(pixel.x) / float(pc.width - 1);
-    float g = float(pixel.y) / float(pc.height - 1);
-    float b = 0.0;
+    // Camera
+    float focal = 1.0;
+    float viewportHeight = 2.0;
+    float viewportWidth = viewportHeight * (float(pc.width)/pc.height);
+    float3 cameraCenter = float3(0, 0, 0);
 
-    pixelsOut[pixel] = float4(r, g, b, 1.0);
+    float3 viewportU = float3(viewportWidth, 0, 0);
+    float3 viewportV = float3(0, -viewportHeight, 0);
+
+    float3 pixDeltaU = viewportU / pc.width;
+    float3 pixDeltaV = viewportV / pc.height;
+
+    float3 viewportUpperLeft = cameraCenter - float3(0, 0, focal) - viewportU/2 - viewportV/2;
+    float3 pixel00Loc = viewportUpperLeft + 0.5 * (pixDeltaU + pixDeltaV);
+
+    float3 pixelCenter = pixel00Loc + (pixel.x * pixDeltaU) + (pixel.y * pixDeltaV);
+    float3 rayDir = pixelCenter - cameraCenter;
+
+    Ray r = {cameraCenter, rayDir};
+    float3 pixColor = rayColor(r);
+
+    pixelsOut[pixel] = float4((float3)pixColor, 1.0);
 }
