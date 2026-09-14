@@ -10,7 +10,6 @@
 #include <GLFW/glfw3.h>
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
-#include "particle.hpp"
 #include "buffer.hpp"
 #include "swapchain.hpp"
 #include "commandPool.hpp"
@@ -18,7 +17,6 @@
 #include "descriptorSet.hpp"
 #include "deviceExtension.hpp"
 #include "image.hpp"
-#include "memory.hpp"
 #include "pipelineBuilder.hpp"
 #include "validation.hpp"
 #include "../core/window.hpp"
@@ -325,52 +323,19 @@ void Device::createDescriptorPool() {
 
 void Device::createShaderStorageImage() {
 	mShaderStorageImages.clear();
-	mShaderStorageImageMemory.clear();
-	mShaderStorageImageViews.clear();
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
-		vk::ImageCreateInfo imageInfo{};
-		imageInfo.imageType = vk::ImageType::e2D;
-		imageInfo.format = vk::Format::eR8G8B8A8Unorm;
-		imageInfo.extent = vk::Extent3D{
-			.width = WIDTH,
-			.height = HEIGHT,
-			.depth = 1
-		};
-		imageInfo.mipLevels = 1;
-		imageInfo.arrayLayers = 1;
-		imageInfo.samples = vk::SampleCountFlagBits::e1;
-		imageInfo.tiling = vk::ImageTiling::eOptimal;
-		imageInfo.usage = vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled;
-		imageInfo.initialLayout = vk::ImageLayout::eUndefined;
-
-		mShaderStorageImages.emplace_back(mDevice, imageInfo);
-		auto& image = mShaderStorageImages.back();
-
-		const vk::MemoryRequirements memRequirements = image.getMemoryRequirements();
-
-		mShaderStorageImageMemory.emplace_back(mDevice,
+		mShaderStorageImages.emplace_back(
+			mDevice,
 			mPhysicalDevice,
-			memRequirements.size,
-			memRequirements.memoryTypeBits,
+			WIDTH,
+			HEIGHT,
+			1,
+			vk::SampleCountFlagBits::e1,
+			vk::Format::eR8G8B8A8Unorm,
+			vk::ImageTiling::eOptimal,
+			vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled,
 			vk::MemoryPropertyFlagBits::eDeviceLocal);
-
-		auto& memory = mShaderStorageImageMemory.back();
-		image.bindMemory(*memory, 0);
-
-		vk::ImageViewCreateInfo viewInfo{};
-		viewInfo.image = image;
-		viewInfo.viewType = vk::ImageViewType::e2D;
-		viewInfo.format = vk::Format::eR8G8B8A8Unorm;
-
-		viewInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
-
-		viewInfo.subresourceRange.baseMipLevel = 0;
-		viewInfo.subresourceRange.levelCount = 1;
-		viewInfo.subresourceRange.baseArrayLayer = 0;
-		viewInfo.subresourceRange.layerCount = 1;
-
-		mShaderStorageImageViews.emplace_back(mDevice, viewInfo);
 	}
 }
 
@@ -391,9 +356,7 @@ void Device::createSampler() {
 		.maxLod = 0.0f
 	};
 
-	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
-		mSamplers.emplace_back(mDevice, samplerInfo);
-	}
+	mSampler = vk::raii::Sampler(mDevice, samplerInfo);
 }
 
 void Device::createComputeDescriptorSets() {
@@ -408,7 +371,7 @@ void Device::createComputeDescriptorSets() {
 			*mComputeDescriptorSets[i],
 			0,
 			vk::DescriptorType::eStorageImage,
-			mShaderStorageImageViews[i],
+			mShaderStorageImages[i].view(),
 			vk::ImageLayout::eGeneral);
 
 		writer.update();
@@ -427,9 +390,9 @@ void Device::createGraphicsDescriptorSets() {
 			*mGraphicsDescriptorSets[i],
 			0,
 			vk::DescriptorType::eCombinedImageSampler,
-			mShaderStorageImageViews[i],
+			mShaderStorageImages[i].view(),
 			vk::ImageLayout::eShaderReadOnlyOptimal,
-			mSamplers[i]);
+			mSampler);
 
 		writer.update();
 	}
@@ -452,14 +415,14 @@ void Device::recordGraphicsCommandBuffer(const uint32_t imageIndex) {
 
 	const auto& image = mSwapchain.image(imageIndex);
 	// Before starting rendering, transition the swapchain image to COLOR_ATTACHMENT_OPTIMAL
-	image::transitionImageLayout(
+	Image::transitionImageLayout(
 		image,
+		vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+		{},
+		vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+		vk::AccessFlagBits2::eColorAttachmentWrite,
 		vk::ImageLayout::eUndefined,
 		vk::ImageLayout::eColorAttachmentOptimal,
-		{}, // srcAccessMask (no need to wait for previous operations)
-		vk::AccessFlagBits2::eColorAttachmentWrite, // dstAccessMask
-		vk::PipelineStageFlagBits2::eColorAttachmentOutput, // srcStage
-		vk::PipelineStageFlagBits2::eColorAttachmentOutput, // dstStage
 		commandBuffer
 	);
 
@@ -501,14 +464,14 @@ void Device::recordGraphicsCommandBuffer(const uint32_t imageIndex) {
 	(*commandBuffer).draw(3, 1, 0, 0);
 	(*commandBuffer).endRendering();
 	// After rendering, transition the swapchain image to PRESENT_SRC
-	image::transitionImageLayout(
+	Image::transitionImageLayout(
 		image,
+		vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+		vk::AccessFlagBits2::eColorAttachmentWrite,
+		vk::PipelineStageFlagBits2::eBottomOfPipe,
+		{},
 		vk::ImageLayout::eColorAttachmentOptimal,
 		vk::ImageLayout::ePresentSrcKHR,
-		vk::AccessFlagBits2::eColorAttachmentWrite, // srcAccessMask
-		{}, // dstAccessMask
-		vk::PipelineStageFlagBits2::eColorAttachmentOutput, // srcStage
-		vk::PipelineStageFlagBits2::eBottomOfPipe, // dstStage
 		commandBuffer
 	);
 	(*commandBuffer).end();
@@ -519,31 +482,16 @@ void Device::recordComputeCommandBuffer() {
 	(*commandBuffer).reset();
 	(*commandBuffer).begin({});
 
-	const vk::ImageMemoryBarrier2 barrier{
-		.srcStageMask = vk::PipelineStageFlagBits2::eTopOfPipe,
-		.srcAccessMask = {},
-		.dstStageMask = vk::PipelineStageFlagBits2::eComputeShader,
-		.dstAccessMask = vk::AccessFlagBits2::eShaderWrite,
-		.oldLayout = vk::ImageLayout::eUndefined,
-		.newLayout = vk::ImageLayout::eGeneral,
-		.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-		.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-		.image = mShaderStorageImages[mFrameIndex],
-		.subresourceRange = {
-			.aspectMask = vk::ImageAspectFlagBits::eColor,
-			.baseMipLevel = 0,
-			.levelCount = 1,
-			.baseArrayLayer = 0,
-			.layerCount = 1
-		}
-	};
-
-	const vk::DependencyInfo dependencyInfo{
-		.imageMemoryBarrierCount = 1,
-		.pImageMemoryBarriers = &barrier
-	};
-
-	(*commandBuffer).pipelineBarrier2(dependencyInfo);
+	Image::transitionImageLayout(
+		**mShaderStorageImages[mFrameIndex],
+		vk::PipelineStageFlagBits2::eTopOfPipe,
+		{},
+		vk::PipelineStageFlagBits2::eComputeShader,
+		vk::AccessFlagBits2::eShaderWrite,
+		vk::ImageLayout::eUndefined,
+		vk::ImageLayout::eGeneral,
+		commandBuffer
+	);
 
 	(*commandBuffer).bindPipeline(vk::PipelineBindPoint::eCompute, **mComputePipeline);
 	(*commandBuffer).bindDescriptorSets(
@@ -562,33 +510,19 @@ void Device::recordComputeCommandBuffer() {
 		vk::ShaderStageFlagBits::eCompute,
 		0,
 		vk::ArrayProxy<const ComputePushConstants>(pc));
+
 	(*commandBuffer).dispatch(WIDTH / THREADS_PER_GROUP, HEIGHT / THREADS_PER_GROUP, 1);
 
-	const vk::ImageMemoryBarrier2 barrier1{
-		.srcStageMask = vk::PipelineStageFlagBits2::eComputeShader,
-		.srcAccessMask = vk::AccessFlagBits2::eShaderWrite,
-		.dstStageMask = vk::PipelineStageFlagBits2::eFragmentShader,
-		.dstAccessMask = vk::AccessFlagBits2::eShaderSampledRead,
-		.oldLayout = vk::ImageLayout::eGeneral,
-		.newLayout = vk::ImageLayout::eShaderReadOnlyOptimal,
-		.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-		.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-		.image = mShaderStorageImages[mFrameIndex],
-		.subresourceRange = {
-			.aspectMask = vk::ImageAspectFlagBits::eColor,
-			.baseMipLevel = 0,
-			.levelCount = 1,
-			.baseArrayLayer = 0,
-			.layerCount = 1
-		}
-	};
-
-	const vk::DependencyInfo dependencyInfo1{
-		.imageMemoryBarrierCount = 1,
-		.pImageMemoryBarriers = &barrier1
-	};
-
-	(*commandBuffer).pipelineBarrier2(dependencyInfo1);
+	Image::transitionImageLayout(
+		**mShaderStorageImages[mFrameIndex],
+		vk::PipelineStageFlagBits2::eComputeShader,
+		vk::AccessFlagBits2::eShaderWrite,
+		vk::PipelineStageFlagBits2::eFragmentShader,
+		vk::AccessFlagBits2::eShaderSampledRead,
+		vk::ImageLayout::eGeneral,
+		vk::ImageLayout::eShaderReadOnlyOptimal,
+		commandBuffer
+	);
 
 	(*commandBuffer).end();
 }

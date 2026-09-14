@@ -8,6 +8,7 @@
 #include "pipelineBuilder.hpp"
 #include "swapchain.hpp"
 
+class Image;
 class DeviceMemory;
 
 enum class QueueType { Graphics, Compute };
@@ -108,10 +109,8 @@ private:
 	std::vector<vk::raii::DescriptorSet> mGraphicsDescriptorSets;
 	GraphicsPipeline mGraphicsPipeline{};
 	ComputePipeline mComputePipeline{};
-	std::vector<vk::raii::Image> mShaderStorageImages;
-	std::vector<DeviceMemory> mShaderStorageImageMemory;
-	std::vector<vk::raii::ImageView> mShaderStorageImageViews;
-	std::vector<vk::raii::Sampler> mSamplers;
+	std::vector<Image> mShaderStorageImages;
+	vk::raii::Sampler mSampler{nullptr};
 	CommandPool mCommandPool;
 	std::vector<CommandBuffer> mGraphicsCommandBuffers;
 	std::vector<CommandBuffer> mComputeCommandBuffers;

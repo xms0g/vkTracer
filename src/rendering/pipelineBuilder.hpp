@@ -1,7 +1,6 @@
 #pragma once
 #define VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
 #include <vulkan/vulkan_raii.hpp>
-#include "vertex.hpp"
 #include "shader.hpp"
 
 class DescriptorSetLayout;
@@ -19,8 +18,6 @@ public:
 	PipelineBuilder& addFragmentShader(Shader& shader, const std::string& entry);
 
 	PipelineBuilder& addComputeShader(Shader& shader, const std::string& entry);
-
-	PipelineBuilder& vertexInput(const VertexLayout& layout);
 
 	PipelineBuilder& topology(vk::PrimitiveTopology topology);
 

@@ -44,17 +44,6 @@ PipelineBuilder& PipelineBuilder::addComputeShader(Shader& shader, const std::st
 	return *this;
 }
 
-PipelineBuilder& PipelineBuilder::vertexInput(const VertexLayout& layout) {
-	mVertexInputInfo = {
-		.vertexBindingDescriptionCount = 1,
-		.pVertexBindingDescriptions = &layout.bindingDescription,
-		.vertexAttributeDescriptionCount = static_cast<uint32_t>(layout.attributeDescriptions.size()),
-		.pVertexAttributeDescriptions = layout.attributeDescriptions.data()
-	};
-
-	return *this;
-}
-
 PipelineBuilder& PipelineBuilder::topology(const vk::PrimitiveTopology topology) {
 	mInputAssembly.topology = topology;
 	mInputAssembly.primitiveRestartEnable = vk::False;
