@@ -62,18 +62,25 @@ struct Ray {
     }
 };
 
-bool hitSphere(float3 center, float radius, Ray ray) {
+float hitSphere(float3 center, float radius, Ray ray) {
     float3 oc = center - ray.origin;
     float a = dot(ray.direction, ray.direction);
-    float b = -2.0 * dot(ray.direction, oc);
+    float h = dot(ray.direction, oc);
     float c = dot(oc, oc) - radius * radius;
-    float discriminant = b * b - 4 * a * c;
-    return (discriminant >= 0);
+    float discriminant = h * h - a * c;
+
+    if (discriminant < 0) {
+        return -1.0;
+    } else {
+        return (h - sqrt(discriminant)) / a;
+    }
 }
 
 float3 rayColor(Ray ray) {
-    if (hitSphere(float3(0, 0, -1), 0.5, ray)) {
-        return float3(1, 0, 0);
+    float t = hitSphere(float3(0, 0, -1), 0.5, ray);
+    if (t > 0.0) {
+        float3 N = normalize(ray.at(t) - float3(0, 0, -1));
+        return 0.5 * float3(N.x+1, N.y+1, N.z+1);
     }
 
     float3 unitDir = normalize(ray.direction);
