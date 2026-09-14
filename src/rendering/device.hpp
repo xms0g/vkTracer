@@ -59,9 +59,7 @@ private:
 
 	void createSampler();
 
-	void createComputeDescriptorSets();
-
-	void createGraphicsDescriptorSets();
+	void createDescriptorSets();
 
 	void createCommandBuffers();
 

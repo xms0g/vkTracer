@@ -41,8 +41,7 @@ void Device::init() {
 		createShaderStorageImage();
 		createSampler();
 		createDescriptorPool();
-		createComputeDescriptorSets();
-		createGraphicsDescriptorSets();
+		createDescriptorSets();
 		createCommandBuffers();
 		createSyncObjects();
 	} catch (const std::runtime_error& e) {
@@ -359,12 +358,13 @@ void Device::createSampler() {
 	mSampler = vk::raii::Sampler(mDevice, samplerInfo);
 }
 
-void Device::createComputeDescriptorSets() {
+void Device::createDescriptorSets() {
 	const DescriptorSetAllocator allocator(mDevice, mDescriptorPool);
 	mComputeDescriptorSets = allocator.allocate(MAX_FRAMES_IN_FLIGHT, **mComputeDescriptorSetLayout);
+	mGraphicsDescriptorSets = allocator.allocate(MAX_FRAMES_IN_FLIGHT, **mGraphicsDescriptorSetLayout);
 
 	DescriptorSetWriter writer(mDevice);
-	writer.reserve(MAX_FRAMES_IN_FLIGHT);
+	writer.reserve(MAX_FRAMES_IN_FLIGHT * 2);
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
 		writer.writeImage(
@@ -374,18 +374,6 @@ void Device::createComputeDescriptorSets() {
 			mShaderStorageImages[i].view(),
 			vk::ImageLayout::eGeneral);
 
-		writer.update();
-	}
-}
-
-void Device::createGraphicsDescriptorSets() {
-	const DescriptorSetAllocator allocator(mDevice, mDescriptorPool);
-	mGraphicsDescriptorSets = allocator.allocate(MAX_FRAMES_IN_FLIGHT, **mGraphicsDescriptorSetLayout);
-
-	DescriptorSetWriter writer(mDevice);
-	writer.reserve(MAX_FRAMES_IN_FLIGHT);
-
-	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
 		writer.writeImage(
 			*mGraphicsDescriptorSets[i],
 			1,
