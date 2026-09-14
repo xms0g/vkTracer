@@ -25,7 +25,7 @@ VSOutput vertMain(uint vertexId : SV_VertexID) {
     return output;
 }
 
-[[vk::binding(0, 0)]]
+[[vk::binding(1, 0)]]
 Sampler2D pixels;
 
 [shader("fragment")]
@@ -75,7 +75,7 @@ float3 rayColor(Ray ray) {
     if (hitSphere(float3(0, 0, -1), 0.5, ray)) {
         return float3(1, 0, 0);
     }
-    
+
     float3 unitDir = normalize(ray.direction);
     float a = 0.5 * (unitDir.y + 1.0);
     return (1.0 - a) * float3(1.0, 1.0, 1.0) + a * float3(0.0, 0.7, 1.0);

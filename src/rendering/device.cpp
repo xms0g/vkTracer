@@ -278,7 +278,7 @@ void Device::createDescriptorSetLayout() {
 	mGraphicsDescriptorSetLayout = DescriptorSetLayout(mDevice);
 	mGraphicsDescriptorSetLayout
 			.addBinding(
-				0,
+				1,
 				vk::DescriptorType::eCombinedImageSampler,
 				1,
 				vk::ShaderStageFlagBits::eFragment)
@@ -388,7 +388,7 @@ void Device::createGraphicsDescriptorSets() {
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
 		writer.writeImage(
 			*mGraphicsDescriptorSets[i],
-			0,
+			1,
 			vk::DescriptorType::eCombinedImageSampler,
 			mShaderStorageImages[i].view(),
 			vk::ImageLayout::eShaderReadOnlyOptimal,
