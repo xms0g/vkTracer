@@ -3,41 +3,35 @@
 
 Image::Image(const vk::raii::Device& device,
              const vk::raii::PhysicalDevice& phyDev,
-             const uint32_t width,
-             const uint32_t height,
-             const uint32_t mipLevels,
-             const vk::SampleCountFlagBits numSamples,
-             const vk::Format format,
-             const vk::ImageTiling tiling,
-             const vk::ImageUsageFlags usage,
-             const vk::MemoryPropertyFlags properties) {
+             const ImageConfig& config) {
 	const vk::ImageCreateInfo imageInfo{
 		.imageType = vk::ImageType::e2D,
-		.format = format,
+		.format = config.format,
 		.extent = vk::Extent3D{
-			.width = width,
-			.height = height,
+			.width = config.width,
+			.height = config.height,
 			.depth = 1
 		},
-		.mipLevels = mipLevels,
+		.mipLevels = config.mipLevels,
 		.arrayLayers = 1,
-		.samples = numSamples,
-		.tiling = tiling,
-		.usage = usage,
+		.samples = config.numSamples,
+		.tiling = config.tiling,
+		.usage = config.usage,
 		.initialLayout = vk::ImageLayout::eUndefined
 	};
 
 	mImage = vk::raii::Image(device, imageInfo);
 
 	const vk::MemoryRequirements memRequirements = mImage.getMemoryRequirements();
-	mImageMemory = DeviceMemory(device, phyDev, memRequirements.size, memRequirements.memoryTypeBits, properties);
+	mImageMemory = DeviceMemory(device, phyDev, memRequirements.size, memRequirements.memoryTypeBits,
+	                            config.properties);
 
 	mImage.bindMemory(*mImageMemory, 0);
 
 	const vk::ImageViewCreateInfo viewInfo{
 		.image = mImage,
 		.viewType = vk::ImageViewType::e2D,
-		.format = format,
+		.format = config.format,
 
 		.subresourceRange = {
 			.aspectMask = vk::ImageAspectFlagBits::eColor,
@@ -49,6 +43,21 @@ Image::Image(const vk::raii::Device& device,
 	};
 
 	mImageView = vk::raii::ImageView(device, viewInfo);
+}
+
+Image::Image(Image&& other) noexcept
+	: mImage(std::move(other.mImage)),
+	  mImageView(std::move(other.mImageView)),
+	  mImageMemory(std::move(other.mImageMemory)) {
+}
+
+Image& Image::operator=(Image&& other) noexcept {
+	if (this != &other) {
+		mImage = std::move(other.mImage);
+		mImageView = std::move(other.mImageView);
+		mImageMemory = std::move(other.mImageMemory);
+	}
+	return *this;
 }
 
 const vk::raii::ImageView& Image::view() const noexcept {
