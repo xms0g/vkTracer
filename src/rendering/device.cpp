@@ -22,7 +22,8 @@
 #include "../core/window.hpp"
 #include "../config/config.hpp"
 
-Device::Device(Window& window) : mWindow(window) {
+Device::Device(Window& window)
+	: mWindow(window) {
 }
 
 Device::~Device() = default;
@@ -326,15 +327,16 @@ void Device::createShaderStorageImage() {
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
 		mShaderStorageImages.emplace_back(
 			mDevice,
-			mPhysicalDevice,
-			WIDTH,
-			HEIGHT,
-			1,
-			vk::SampleCountFlagBits::e1,
-			vk::Format::eR8G8B8A8Unorm,
-			vk::ImageTiling::eOptimal,
-			vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled,
-			vk::MemoryPropertyFlagBits::eDeviceLocal);
+			mPhysicalDevice, ImageConfig{
+				.width = WIDTH,
+				.height = HEIGHT,
+				.mipLevels = 1,
+				.numSamples = vk::SampleCountFlagBits::e1,
+				.format = vk::Format::eR8G8B8A8Unorm,
+				.tiling = vk::ImageTiling::eOptimal,
+				.usage = vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled,
+				.properties = vk::MemoryPropertyFlagBits::eDeviceLocal
+			});
 	}
 }
 

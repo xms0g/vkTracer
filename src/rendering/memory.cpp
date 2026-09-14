@@ -1,10 +1,10 @@
 #include "memory.hpp"
 
 DeviceMemory::DeviceMemory(const vk::raii::Device& device,
-						   const vk::raii::PhysicalDevice& phyDev,
-						   const vk::DeviceSize size,
-						   const uint32_t typeFilter,
-						   const vk::MemoryPropertyFlags properties) {
+                           const vk::raii::PhysicalDevice& phyDev,
+                           const vk::DeviceSize size,
+                           const uint32_t typeFilter,
+                           const vk::MemoryPropertyFlags properties) {
 	const vk::MemoryAllocateInfo allocInfo{
 		.allocationSize = size,
 		.memoryTypeIndex = findMemoryType(typeFilter, properties, phyDev)
@@ -13,9 +13,21 @@ DeviceMemory::DeviceMemory(const vk::raii::Device& device,
 	mMemory = vk::raii::DeviceMemory(device, allocInfo);
 }
 
+DeviceMemory::DeviceMemory(DeviceMemory&& other) noexcept
+	: mMemory(std::move(other.mMemory)) {
+}
+
+DeviceMemory& DeviceMemory::operator=(DeviceMemory&& other) noexcept {
+	if (this != &other) {
+		mMemory = std::move(other.mMemory);
+	}
+
+	return *this;
+}
+
 uint32_t DeviceMemory::findMemoryType(const uint32_t typeFilter,
-									  const vk::MemoryPropertyFlags properties,
-									  const vk::raii::PhysicalDevice& phyDev) {
+                                      const vk::MemoryPropertyFlags properties,
+                                      const vk::raii::PhysicalDevice& phyDev) {
 	const vk::PhysicalDeviceMemoryProperties memProperties = phyDev.getMemoryProperties();
 
 	for (uint32_t i = 0; i < memProperties.memoryTypeCount; ++i) {

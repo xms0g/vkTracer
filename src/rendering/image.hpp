@@ -3,6 +3,17 @@
 #include <vulkan/vulkan_raii.hpp>
 #include "memory.hpp"
 
+struct ImageConfig {
+	uint32_t width;
+	uint32_t height;
+	uint32_t mipLevels;
+	vk::SampleCountFlagBits numSamples;
+	vk::Format format;
+	vk::ImageTiling tiling;
+	vk::ImageUsageFlags usage;
+	vk::MemoryPropertyFlags properties;
+};
+
 class CommandBuffer;
 
 class Image {
@@ -11,14 +22,16 @@ public:
 
 	Image(const vk::raii::Device& device,
 	      const vk::raii::PhysicalDevice& phyDev,
-	      uint32_t width,
-	      uint32_t height,
-	      uint32_t mipLevels,
-	      vk::SampleCountFlagBits numSamples,
-	      vk::Format format,
-	      vk::ImageTiling tiling,
-	      vk::ImageUsageFlags usage,
-	      vk::MemoryPropertyFlags properties);
+	      const ImageConfig& config);
+
+	Image(const Image& other) = delete;
+
+	Image& operator=(const Image& other) = delete;
+
+	Image(Image&& other) noexcept;
+
+
+	Image& operator=(Image&& other) noexcept;
 
 	[[nodiscard]]
 	const vk::raii::ImageView& view() const noexcept;
@@ -37,6 +50,6 @@ public:
 
 private:
 	vk::raii::Image mImage{nullptr};
-	DeviceMemory mImageMemory;
 	vk::raii::ImageView mImageView{nullptr};
+	DeviceMemory mImageMemory;
 };
