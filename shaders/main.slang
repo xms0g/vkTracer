@@ -44,43 +44,15 @@ struct PushConstants {
 [[vk::push_constant]]
 PushConstants pc;
 
-struct Ray {
-    float3 orig;
-    float3 dir;
+import ray;
+import sphere;
+import hitRecord;
 
-    __init() {}
-    __init(float3 o, float3 d) {
-        orig = o;
-        dir = d;
-    }
+float3 rayColor(Ray ray, Sphere sphere) {
+    HitRecord rec;
 
-    property float3 origin    { get { return orig; } }
-    property float3 direction { get { return dir; } }
-
-    float3 at(float t) {
-        return orig + t * dir;
-    }
-};
-
-float hitSphere(float3 center, float radius, Ray ray) {
-    float3 oc = center - ray.origin;
-    float a = dot(ray.direction, ray.direction);
-    float h = dot(ray.direction, oc);
-    float c = dot(oc, oc) - radius * radius;
-    float discriminant = h * h - a * c;
-
-    if (discriminant < 0) {
-        return -1.0;
-    } else {
-        return (h - sqrt(discriminant)) / a;
-    }
-}
-
-float3 rayColor(Ray ray) {
-    float t = hitSphere(float3(0, 0, -1), 0.5, ray);
-    if (t > 0.0) {
-        float3 N = normalize(ray.at(t) - float3(0, 0, -1));
-        return 0.5 * float3(N.x+1, N.y+1, N.z+1);
+    if (sphere.hit(ray, 0, 1000, rec)) {
+        return 0.5 * (rec.normal + float3(1,1,1));
     }
 
     float3 unitDir = normalize(ray.direction);
@@ -115,7 +87,10 @@ void compMain(uint3 threadId : SV_DispatchThreadID) {
     float3 rayDir = pixelCenter - cameraCenter;
 
     Ray r = {cameraCenter, rayDir};
-    float3 pixColor = rayColor(r);
+
+    Sphere sp = {float3(0,0,-1), 0.5};
+
+    float3 pixColor = rayColor(r, sp);
 
     pixelsOut[pixel] = float4((float3)pixColor, 1.0);
 }
