@@ -77,7 +77,7 @@ float3 rayColor(Ray ray) {
 
     float3 unitDir = normalize(ray.direction);
     float a = 0.5 * (unitDir.y + 1.0);
-    return (1.0 - a) * float3(1.0, 1.0, 1.0) + a * float3(0.0, 0.7, 1.0);
+    return lerp(float3(1.0, 1.0, 1.0), float3(0.0, 0.7, 1.0), a);
 }
 
 [shader("compute")]
