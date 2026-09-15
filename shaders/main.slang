@@ -36,6 +36,7 @@ float4 fragMain(VSOutput input) : SV_TARGET {
 import ray;
 import sphere;
 import hitRecord;
+import camera;
 
 struct PushConstants {
     uint width;
@@ -88,27 +89,8 @@ void compMain(uint3 threadId : SV_DispatchThreadID) {
     if (pixel.x >= pc.width || pixel.y >= pc.height)
         return;
 
-    // Camera
-    float focal = 1.0;
-    float viewportHeight = 2.0;
-    float viewportWidth = viewportHeight * (float(pc.width)/pc.height);
-    float3 cameraCenter = float3(0, 0, 0);
-
-    float3 viewportU = float3(viewportWidth, 0, 0);
-    float3 viewportV = float3(0, -viewportHeight, 0);
-
-    float3 pixDeltaU = viewportU / pc.width;
-    float3 pixDeltaV = viewportV / pc.height;
-
-    float3 viewportUpperLeft = cameraCenter - float3(0, 0, focal) - viewportU/2 - viewportV/2;
-    float3 pixel00Loc = viewportUpperLeft + 0.5 * (pixDeltaU + pixDeltaV);
-
-    float3 pixelCenter = pixel00Loc + (pixel.x * pixDeltaU) + (pixel.y * pixDeltaV);
-    float3 rayDir = pixelCenter - cameraCenter;
-
-    Ray r = {cameraCenter, rayDir};
-
-    float3 pixColor = rayColor(r);
+    Camera camera = {pc.width, pc.height, float3(0,0,0)};
+    float3 pixColor = rayColor(camera.getRay(pixel.x, pixel.y));
 
     pixelsOut[pixel] = float4((float3)pixColor, 1.0);
 }
