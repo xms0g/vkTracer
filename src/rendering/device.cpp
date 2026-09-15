@@ -18,6 +18,7 @@
 #include "deviceExtension.hpp"
 #include "image.hpp"
 #include "pipelineBuilder.hpp"
+#include "sphere.hpp"
 #include "validation.hpp"
 #include "../core/window.hpp"
 #include "../config/config.hpp"
@@ -40,6 +41,7 @@ void Device::init() {
 		createPipelines();
 		createCommandPool();
 		createShaderStorageImage();
+		createShaderStorageBuffers();
 		createSampler();
 		createDescriptorPool();
 		createDescriptorSets();
@@ -273,12 +275,17 @@ void Device::createDescriptorSetLayout() {
 				vk::DescriptorType::eStorageImage,
 				1,
 				vk::ShaderStageFlagBits::eCompute)
+			.addBinding(
+				1,
+				vk::DescriptorType::eStorageBuffer,
+				1,
+				vk::ShaderStageFlagBits::eCompute)
 			.build();
 
 	mGraphicsDescriptorSetLayout = DescriptorSetLayout(mDevice);
 	mGraphicsDescriptorSetLayout
 			.addBinding(
-				1,
+				2,
 				vk::DescriptorType::eCombinedImageSampler,
 				1,
 				vk::ShaderStageFlagBits::eFragment)
@@ -314,11 +321,47 @@ void Device::createCommandPool() {
 void Device::createDescriptorPool() {
 	mDescriptorPool = DescriptorPool(mDevice);
 	mDescriptorPool
-			.addMaxSets(MAX_FRAMES_IN_FLIGHT * 2)
+			.addMaxSets(MAX_FRAMES_IN_FLIGHT * 3)
 			.addPoolFlags(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet)
 			.addPoolSize(vk::DescriptorType::eStorageImage, MAX_FRAMES_IN_FLIGHT)
+			.addPoolSize(vk::DescriptorType::eStorageBuffer, MAX_FRAMES_IN_FLIGHT)
 			.addPoolSize(vk::DescriptorType::eCombinedImageSampler, MAX_FRAMES_IN_FLIGHT)
 			.build();
+}
+
+void Device::createShaderStorageBuffers() {
+	const auto spheres = Sphere::generateSpheres(2);
+	const vk::DeviceSize bufferSize = sizeof(Sphere) * spheres.size();
+
+	// Create a staging buffer used to upload data to the gpu
+	Buffer stagingBuffer{
+		bufferSize,
+		mDevice,
+		mPhysicalDevice,
+		vk::BufferUsageFlagBits::eTransferSrc,
+		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
+	};
+
+	void* mem = stagingBuffer.map(bufferSize);
+	memcpy(mem, spheres.data(), bufferSize);
+	stagingBuffer.unmap();
+
+	mShaderStorageBuffers.clear();
+
+	// Copy initial sphere data to all storage buffers
+	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+		Buffer ssbo{
+			bufferSize,
+			mDevice,
+			mPhysicalDevice,
+			vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst,
+			vk::MemoryPropertyFlagBits::eDeviceLocal
+		};
+
+		copyBuffer(stagingBuffer, ssbo, bufferSize);
+
+		mShaderStorageBuffers.emplace_back(std::move(ssbo));
+	}
 }
 
 void Device::createShaderStorageImage() {
@@ -366,19 +409,27 @@ void Device::createDescriptorSets() {
 	mGraphicsDescriptorSets = allocator.allocate(MAX_FRAMES_IN_FLIGHT, **mGraphicsDescriptorSetLayout);
 
 	DescriptorSetWriter writer(mDevice);
-	writer.reserve(MAX_FRAMES_IN_FLIGHT * 2);
+	writer.reserve(MAX_FRAMES_IN_FLIGHT * 3);
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
 		writer.writeImage(
-			*mComputeDescriptorSets[i],
-			0,
-			vk::DescriptorType::eStorageImage,
-			mShaderStorageImages[i].view(),
-			vk::ImageLayout::eGeneral);
+					*mComputeDescriptorSets[i],
+					0,
+					vk::DescriptorType::eStorageImage,
+					mShaderStorageImages[i].view(),
+					vk::ImageLayout::eGeneral)
+				.writeBuffer(
+					*mComputeDescriptorSets[i],
+					1,
+					vk::DescriptorType::eStorageBuffer,
+					**mShaderStorageBuffers[i],
+					0,
+					mShaderStorageBuffers[i].size()
+				);
 
 		writer.writeImage(
 			*mGraphicsDescriptorSets[i],
-			1,
+			2,
 			vk::DescriptorType::eCombinedImageSampler,
 			mShaderStorageImages[i].view(),
 			vk::ImageLayout::eShaderReadOnlyOptimal,
@@ -493,6 +544,7 @@ void Device::recordComputeCommandBuffer() {
 	constexpr ComputePushConstants pc{
 		.width = WIDTH,
 		.height = HEIGHT,
+		.sphereCount = 2,
 	};
 
 	(*commandBuffer).pushConstants(
@@ -531,6 +583,35 @@ void Device::createSyncObjects() {
 		vk::FenceCreateInfo fenceInfo{};
 		mFences.emplace_back(mDevice, fenceInfo);
 	}
+}
+
+void Device::copyBuffer(const Buffer& srcBuffer, const Buffer& dstBuffer, const vk::DeviceSize size) const {
+	const vk::raii::CommandBuffer commandCopyBuffer = beginSingleTimeCommands();
+	commandCopyBuffer.copyBuffer(*srcBuffer, *dstBuffer, vk::BufferCopy(0, 0, size));
+	endSingleTimeCommands(commandCopyBuffer);
+}
+
+vk::raii::CommandBuffer Device::beginSingleTimeCommands() const {
+	const vk::CommandBufferAllocateInfo allocInfo{
+		.commandPool = **mCommandPool,
+		.level = vk::CommandBufferLevel::ePrimary,
+		.commandBufferCount = 1
+	};
+
+	vk::raii::CommandBuffer commandBuffer = std::move(mDevice.allocateCommandBuffers(allocInfo).front());
+	constexpr vk::CommandBufferBeginInfo beginInfo{.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit};
+	commandBuffer.begin(beginInfo);
+
+	return commandBuffer;
+}
+
+void Device::endSingleTimeCommands(const vk::raii::CommandBuffer& commandBuffer) const {
+	commandBuffer.end();
+
+	const vk::SubmitInfo submitInfo{.commandBufferCount = 1, .pCommandBuffers = &*commandBuffer};
+
+	mQueue.submit(submitInfo, nullptr);
+	mQueue.waitIdle();
 }
 
 std::vector<const char*> Device::getRequiredInstanceExtensions() {

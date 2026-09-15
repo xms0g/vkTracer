@@ -55,6 +55,8 @@ private:
 
 	void createDescriptorPool();
 
+	void createShaderStorageBuffers();
+
 	void createShaderStorageImage();
 
 	void createSampler();
@@ -69,6 +71,13 @@ private:
 
 	void createSyncObjects();
 
+	void copyBuffer(const Buffer& srcBuffer, const Buffer& dstBuffer, vk::DeviceSize size) const;
+
+	[[nodiscard]]
+	vk::raii::CommandBuffer beginSingleTimeCommands() const;
+
+	void endSingleTimeCommands(const vk::raii::CommandBuffer& commandBuffer) const;
+
 	// Support Functions
 	static std::vector<const char*> getRequiredInstanceExtensions();
 
@@ -82,6 +91,7 @@ private:
 	struct ComputePushConstants {
 		uint32_t width;
 		uint32_t height;
+		uint32_t sphereCount;
 	};
 
 	Window& mWindow;
@@ -108,6 +118,7 @@ private:
 	GraphicsPipeline mGraphicsPipeline{};
 	ComputePipeline mComputePipeline{};
 	std::vector<Image> mShaderStorageImages;
+	std::vector<Buffer> mShaderStorageBuffers;
 	vk::raii::Sampler mSampler{nullptr};
 	CommandPool mCommandPool;
 	std::vector<CommandBuffer> mGraphicsCommandBuffers;

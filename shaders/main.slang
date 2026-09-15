@@ -25,7 +25,7 @@ VSOutput vertMain(uint vertexId : SV_VertexID) {
     return output;
 }
 
-[[vk::binding(1, 0)]]
+[[vk::binding(2, 0)]]
 Sampler2D pixels;
 
 [shader("fragment")]
@@ -33,26 +33,33 @@ float4 fragMain(VSOutput input) : SV_TARGET {
     return pixels.Sample(input.uv);
 }
 
-[[vk::binding(0, 0)]]
-RWTexture2D<float4> pixelsOut;
+import ray;
+import sphere;
+import hitRecord;
 
 struct PushConstants {
     uint width;
     uint height;
+    uint sphereCount;
 };
 
 [[vk::push_constant]]
 PushConstants pc;
 
-import ray;
-import sphere;
-import hitRecord;
+[[vk::binding(0, 0)]]
+RWTexture2D<float4> pixelsOut;
 
-float3 rayColor(Ray ray, Sphere sphere) {
+[[vk::binding(1, 0)]]
+StructuredBuffer<Sphere> spheres;
+
+float3 rayColor(Ray ray) {
     HitRecord rec;
 
-    if (sphere.hit(ray, 0, 1000, rec)) {
-        return 0.5 * (rec.normal + float3(1,1,1));
+    for (uint i = 0; i < pc.sphereCount; ++i) {
+        Sphere sphere = spheres[i];
+        if (sphere.hit(ray, 0, 1000, rec)) {
+            return 0.5 * (rec.normal + float3(1,1,1));
+        }
     }
 
     float3 unitDir = normalize(ray.direction);
@@ -88,9 +95,7 @@ void compMain(uint3 threadId : SV_DispatchThreadID) {
 
     Ray r = {cameraCenter, rayDir};
 
-    Sphere sp = {float3(0,0,-1), 0.5};
-
-    float3 pixColor = rayColor(r, sp);
+    float3 pixColor = rayColor(r);
 
     pixelsOut[pixel] = float4((float3)pixColor, 1.0);
 }
