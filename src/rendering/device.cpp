@@ -22,9 +22,11 @@
 #include "validation.hpp"
 #include "../core/window.hpp"
 #include "../config/config.hpp"
+#include "../core/camera.hpp"
 
-Device::Device(Window& window)
-	: mWindow(window) {
+Device::Device(Window& window, Camera& camera)
+	: mWindow(window),
+	  mCamera(camera) {
 }
 
 Device::~Device() = default;
@@ -541,10 +543,11 @@ void Device::recordComputeCommandBuffer() {
 		0,
 		{mComputeDescriptorSets[mFrameIndex]}, {});
 
-	constexpr ComputePushConstants pc{
+	const ComputePushConstants pc{
 		.width = WIDTH,
 		.height = HEIGHT,
 		.sphereCount = 2,
+		.camCenter = glm::vec4(mCamera.center(), 0.0f),
 	};
 
 	(*commandBuffer).pushConstants(

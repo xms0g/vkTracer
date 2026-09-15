@@ -1,5 +1,6 @@
 #pragma once
 #define VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
+#include <glm/glm.hpp>
 #include <vulkan/vulkan_raii.hpp>
 #include "commandBuffer.hpp"
 #include "commandPool.hpp"
@@ -8,6 +9,7 @@
 #include "pipelineBuilder.hpp"
 #include "swapchain.hpp"
 
+class Camera;
 class Image;
 class DeviceMemory;
 
@@ -18,7 +20,7 @@ class Buffer;
 
 class Device {
 public:
-	explicit Device(Window& window);
+	explicit Device(Window& window, Camera& camera);
 
 	~Device();
 
@@ -92,9 +94,11 @@ private:
 		uint32_t width;
 		uint32_t height;
 		uint32_t sphereCount;
+		alignas(16) glm::vec4 camCenter;
 	};
 
 	Window& mWindow;
+	Camera& mCamera;
 	uint32_t mImageIndex{0};
 	uint32_t mFrameIndex{0};
 	uint64_t mTimelineValue{0};
