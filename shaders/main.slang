@@ -52,14 +52,27 @@ RWTexture2D<float4> pixelsOut;
 [[vk::binding(1, 0)]]
 StructuredBuffer<Sphere> spheres;
 
-float3 rayColor(Ray ray) {
-    HitRecord rec;
+bool hitAnything(Ray ray, float tmin, float tmax, inout HitRecord rec) {
+    bool hitAnything = false;
+    float closestSoFar = tmax;
 
     for (uint i = 0; i < pc.sphereCount; ++i) {
         Sphere sphere = spheres[i];
-        if (sphere.hit(ray, 0, 1000, rec)) {
-            return 0.5 * (rec.normal + float3(1,1,1));
+
+        if (sphere.hit(ray, tmin, closestSoFar, rec)) {
+            hitAnything = true;
+            closestSoFar = rec.interval;
         }
+    }
+
+    return hitAnything;
+}
+
+float3 rayColor(Ray ray) {
+    HitRecord rec;
+
+    if (hitAnything(ray, 0, 1000, rec)) {
+        return 0.5 * (rec.normal + float3(1,1,1));
     }
 
     float3 unitDir = normalize(ray.direction);

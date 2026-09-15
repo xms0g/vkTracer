@@ -6,11 +6,6 @@ public struct Sphere {
     private float3 center;
     private float radius;
 
-    public __init(float3 c, float r) {
-        center = c;
-        radius = fmax(0, r);
-    }
-
     public bool hit(Ray ray, float tmin, float tmax, inout HitRecord rec) {
         float3 oc = center - ray.origin;
         float a = dot(ray.direction, ray.direction);
