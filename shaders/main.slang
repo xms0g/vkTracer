@@ -41,7 +41,6 @@ import camera;
 struct PushConstants {
     uint width;
     uint height;
-    uint sphereCount;
     float4 camCenter;
     float4 camFront;
     float4 camRight;
@@ -61,7 +60,7 @@ bool hitAnything(Ray ray, float tmin, float tmax, inout HitRecord rec) {
     bool hitAnything = false;
     float closestSoFar = tmax;
 
-    for (uint i = 0; i < pc.sphereCount; ++i) {
+    for (uint i = 0; i < spheres.getCount(); ++i) {
         Sphere sphere = spheres[i];
 
         if (sphere.hit(ray, tmin, closestSoFar, rec)) {

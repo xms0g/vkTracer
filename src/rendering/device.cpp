@@ -372,7 +372,8 @@ void Device::createShaderStorageImage() {
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
 		mShaderStorageImages.emplace_back(
 			mDevice,
-			mPhysicalDevice, ImageConfig{
+			mPhysicalDevice,
+			ImageConfig{
 				.width = WIDTH,
 				.height = HEIGHT,
 				.mipLevels = 1,
@@ -546,7 +547,6 @@ void Device::recordComputeCommandBuffer() {
 	const ComputePushConstants pc{
 		.width = WIDTH,
 		.height = HEIGHT,
-		.sphereCount = 2,
 		.camCenter = glm::vec4(mCamera.center(), 0.0f),
 		.camFront = glm::vec4(mCamera.front(), 0.0f),
 		.camRight = glm::vec4(mCamera.right(), 0.0f),

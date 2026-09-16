@@ -81,6 +81,7 @@ private:
 	void endSingleTimeCommands(const vk::raii::CommandBuffer& commandBuffer) const;
 
 	// Support Functions
+	[[nodiscard]]
 	std::vector<const char*> getRequiredInstanceExtensions() const;
 
 	static VKAPI_ATTR vk::Bool32 VKAPI_CALL debugCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT severity,
@@ -93,7 +94,6 @@ private:
 	struct ComputePushConstants {
 		uint32_t width;
 		uint32_t height;
-		uint32_t sphereCount;
 		alignas(16) glm::vec4 camCenter;
 		alignas(16) glm::vec4 camFront;
 		alignas(16) glm::vec4 camRight;
