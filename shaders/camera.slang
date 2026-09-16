@@ -19,15 +19,18 @@ public struct Camera {
     public Ray getRay(int x, int y, float4 center,  float4 front, float4 right, float4 up) {
         float3 viewportU = right.xyz * viewportWidth;
         float3 viewportV = up.xyz * -viewportHeight;
+
         float3 pixDeltaU = viewportU / width;
         float3 pixDeltaV = viewportV / height;
+
         float3 viewportCenter = center.xyz + front.xyz * focal;
         float3 viewportUpperLeft = viewportCenter - viewportU/2 - viewportV/2;
+
         float3 pixel00Loc = viewportUpperLeft + 0.5 * (pixDeltaU + pixDeltaV);
         float3 pixelCenter = pixel00Loc + (x * pixDeltaU) + (y * pixDeltaV);
-        float3 rayDir = pixelCenter - center.xyz;
+
+        float3 rayDir = normalize(pixelCenter - center.xyz);
 
         return {center.xyz, rayDir};
     }
-
 };
