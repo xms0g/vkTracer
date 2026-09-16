@@ -56,7 +56,10 @@ RWTexture2D<float4> pixelsOut;
 [[vk::binding(1, 0)]]
 StructuredBuffer<Sphere> spheres;
 
-bool hitAnything(Ray ray, float tmin, float tmax, inout HitRecord rec) {
+static constexpr int SAMPLES_PER_PIXEL = 100;
+static constexpr float PIXEL_SAMPLES_SCALE = 1.0 / SAMPLES_PER_PIXEL;
+
+bool hitAnything(Ray ray, constexpr float tmin, constexpr float tmax, inout HitRecord rec) {
     bool hitAnything = false;
     float closestSoFar = tmax;
 
@@ -93,7 +96,12 @@ void compMain(uint3 threadId : SV_DispatchThreadID) {
         return;
 
     Camera camera = {pc.width, pc.height};
-    float3 pixColor = rayColor(camera.getRay(pixel.x, pixel.y, pc.camCenter, pc.camFront, pc.camRight, pc.camUp));
 
-    pixelsOut[pixel] = float4(pixColor, 1.0);
+    float3 pixColor = float3(0.0);
+    for (int i = 0; i < SAMPLES_PER_PIXEL; ++i) {
+        Ray ray = camera.getRay(pixel.x, pixel.y, i, pc.camCenter, pc.camFront, pc.camRight, pc.camUp);
+        pixColor += rayColor(ray);
+    }
+
+    pixelsOut[pixel] = float4(pixColor * PIXEL_SAMPLES_SCALE, 1.0);
 }

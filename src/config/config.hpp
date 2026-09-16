@@ -13,7 +13,7 @@ constexpr int32_t MAX_FRAMES_IN_FLIGHT{2};
 constexpr uint32_t THREADS_PER_GROUP{8};
 constexpr auto SHADER_NAME = "main.spv";
 // Camera
-constexpr float CAMERA_SPEED{5.0f};
+constexpr float CAMERA_SPEED{1.0f};
 constexpr float ZNEAR{0.1f};
 constexpr float ZFAR{100000.0f};
 constexpr float ZOOM{45.0f};

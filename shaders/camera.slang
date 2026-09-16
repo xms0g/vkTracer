@@ -1,5 +1,6 @@
 module camera;
 import ray;
+import random;
 
 public struct Camera {
     private uint width;
@@ -16,7 +17,7 @@ public struct Camera {
         this.viewportWidth = viewportHeight * (float(width)/height);
     }
 
-    public Ray getRay(int x, int y, float4 center,  float4 front, float4 right, float4 up) {
+    public Ray getRay(int x, int y, int sampleIdx, float4 center, float4 front, float4 right, float4 up) {
         float3 viewportU = right.xyz * viewportWidth;
         float3 viewportV = up.xyz * -viewportHeight;
 
@@ -27,10 +28,12 @@ public struct Camera {
         float3 viewportUpperLeft = viewportCenter - viewportU/2 - viewportV/2;
 
         float3 pixel00Loc = viewportUpperLeft + 0.5 * (pixDeltaU + pixDeltaV);
-        float3 pixelCenter = pixel00Loc + (x * pixDeltaU) + (y * pixDeltaV);
 
-        float3 rayDir = normalize(pixelCenter - center.xyz);
+        uint seed = x + y * width + sampleIdx * width * height + 1;
+        float3 offset = sampleSquare(seed);
+        float3 pixelSample = pixel00Loc + (pixDeltaU * (x + offset.x)) + (pixDeltaV * (y + offset.y));
 
+        float3 rayDir = normalize(pixelSample - center.xyz);
         return {center.xyz, rayDir};
     }
 };

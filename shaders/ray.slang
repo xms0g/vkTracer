@@ -4,7 +4,6 @@ public struct Ray {
     private float3 orig;
     private float3 dir;
 
-    public __init() {}
     public __init(float3 o, float3 d) {
         orig = o;
         dir = d;
