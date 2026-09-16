@@ -7,8 +7,8 @@
 #include <chrono>
 #include <random>
 #include <unordered_set>
-#include <GLFW/glfw3.h>
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include <SDL_vulkan.h>
 #include <glm/glm.hpp>
 #include "buffer.hpp"
 #include "swapchain.hpp"
@@ -95,8 +95,7 @@ void Device::presentFrame() {
 	result = mQueue.presentKHR(presentInfo);
 	// Due to VULKAN_HPP_HANDLE_ERROR_OUT_OF_DATE_AS_SUCCESS being defined, eErrorOutOfDateKHR can be checked as a result
 	// here and does not need to be caught by an exception.
-	if (result == vk::Result::eSuboptimalKHR || result == vk::Result::eErrorOutOfDateKHR || mWindow.windowResized()) {
-		mWindow.windowResized(false);
+	if (result == vk::Result::eSuboptimalKHR || result == vk::Result::eErrorOutOfDateKHR) {
 		mSwapchain.recreate(mSurface, mDevice, mPhysicalDevice, *mWindow);
 	} else {
 		// There are no other success codes than eSuccess; on any error code, presentKHR already threw an exception.
@@ -149,7 +148,7 @@ void Device::createInstance() {
 		}
 	}
 
-	const auto glfwExtensions = getRequiredInstanceExtensions();
+	const auto sdlExtensions = getRequiredInstanceExtensions();
 
 	std::unordered_set<std::string> supportedExtensions;
 	for (const auto& [extensionName, specVersion]: mContext.enumerateInstanceExtensionProperties()) {
@@ -157,9 +156,9 @@ void Device::createInstance() {
 	}
 
 	std::vector<const char*> requiredExtensions;
-	for (const auto& extension: glfwExtensions) {
+	for (const auto& extension: sdlExtensions) {
 		if (!supportedExtensions.contains(extension)) {
-			throw std::runtime_error("Required GLFW extension not supported: " + std::string(extension));
+			throw std::runtime_error("Required SDL extension not supported: " + std::string(extension));
 		}
 		requiredExtensions.emplace_back(extension);
 	}
@@ -209,8 +208,9 @@ void Device::setupDebugMessenger() {
 
 void Device::createSurface() {
 	VkSurfaceKHR surface;
-	if (glfwCreateWindowSurface(*mInstance, &*mWindow, nullptr, &surface) != 0) {
-		throw std::runtime_error("Failed to create window surface!");
+
+	if (!SDL_Vulkan_CreateSurface(&*mWindow, *mInstance, &surface)) {
+		throw std::runtime_error(std::format("SDL_Vulkan_CreateSurface failed: {}", SDL_GetError()));
 	}
 
 	mSurface = vk::raii::SurfaceKHR(mInstance, surface);
@@ -548,6 +548,9 @@ void Device::recordComputeCommandBuffer() {
 		.height = HEIGHT,
 		.sphereCount = 2,
 		.camCenter = glm::vec4(mCamera.center(), 0.0f),
+		.camFront = glm::vec4(mCamera.front(), 0.0f),
+		.camRight = glm::vec4(mCamera.right(), 0.0f),
+		.camUp = glm::vec4(mCamera.up(), 0.0f),
 	};
 
 	(*commandBuffer).pushConstants(
@@ -617,11 +620,19 @@ void Device::endSingleTimeCommands(const vk::raii::CommandBuffer& commandBuffer)
 	mQueue.waitIdle();
 }
 
-std::vector<const char*> Device::getRequiredInstanceExtensions() {
-	uint32_t glfwExtensionCount = 0;
-	const auto glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+std::vector<const char*> Device::getRequiredInstanceExtensions() const {
+	uint32_t extensionCount = 0;
 
-	std::vector extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
+	if (!SDL_Vulkan_GetInstanceExtensions(&*mWindow, &extensionCount, nullptr)) {
+		throw std::runtime_error(SDL_GetError());
+	}
+
+	std::vector<const char*> extensions(extensionCount);
+
+	if (!SDL_Vulkan_GetInstanceExtensions(&*mWindow, &extensionCount, extensions.data())) {
+		throw std::runtime_error(SDL_GetError());
+	}
+
 	if (enableValidationLayers) {
 		extensions.push_back(vk::EXTDebugUtilsExtensionName);
 	}

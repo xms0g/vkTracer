@@ -4,6 +4,7 @@
 struct MouseMovementEvent;
 struct KeyPressedEvent;
 class EventBus;
+
 class Camera {
 public:
 	explicit Camera(const glm::vec3& center = glm::vec3{0.0f, 0.0f, 0.0f},
@@ -11,6 +12,15 @@ public:
 
 	[[nodiscard]]
 	glm::vec3 center() const;
+
+	[[nodiscard]]
+	glm::vec3 front() const;
+
+	[[nodiscard]]
+	glm::vec3 right() const;
+
+	[[nodiscard]]
+	glm::vec3 up() const;
 
 	void configure(EventBus& eventBus);
 

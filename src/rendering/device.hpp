@@ -81,7 +81,7 @@ private:
 	void endSingleTimeCommands(const vk::raii::CommandBuffer& commandBuffer) const;
 
 	// Support Functions
-	static std::vector<const char*> getRequiredInstanceExtensions();
+	std::vector<const char*> getRequiredInstanceExtensions() const;
 
 	static VKAPI_ATTR vk::Bool32 VKAPI_CALL debugCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT severity,
 	                                                      vk::DebugUtilsMessageTypeFlagsEXT type,
@@ -95,6 +95,9 @@ private:
 		uint32_t height;
 		uint32_t sphereCount;
 		alignas(16) glm::vec4 camCenter;
+		alignas(16) glm::vec4 camFront;
+		alignas(16) glm::vec4 camRight;
+		alignas(16) glm::vec4 camUp;
 	};
 
 	Window& mWindow;

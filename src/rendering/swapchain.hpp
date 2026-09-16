@@ -1,8 +1,9 @@
 #pragma once
-#include <GLFW/glfw3.h>
+#include <SDL.h>
 #define VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
 #include <vulkan/vulkan_raii.hpp>
 
+class Window;
 class Swapchain {
 public:
 	Swapchain() = default;
@@ -10,7 +11,7 @@ public:
 	Swapchain(const vk::raii::SurfaceKHR& surface,
 	          const vk::raii::Device& device,
 	          const vk::raii::PhysicalDevice& phyDev,
-	          GLFWwindow& window);
+	          SDL_Window& window);
 
 	vk::SurfaceFormatKHR& surfaceFormat();
 
@@ -26,7 +27,7 @@ public:
 	void recreate(const vk::raii::SurfaceKHR& surface,
 	              const vk::raii::Device& device,
 	              const vk::raii::PhysicalDevice& phyDev,
-	              GLFWwindow& window);
+	              SDL_Window& window);
 
 	vk::raii::SwapchainKHR& operator*() noexcept { return mSwapChain; }
 	const vk::raii::SwapchainKHR& operator*() const noexcept { return mSwapChain; }
@@ -35,7 +36,7 @@ private:
 	void create(const vk::raii::SurfaceKHR& surface,
 	            const vk::raii::Device& device,
 	            const vk::raii::PhysicalDevice& phyDev,
-	            GLFWwindow& window);
+	            SDL_Window& window);
 
 	void createSwapchainImageViews(const vk::raii::Device& device);
 
@@ -43,7 +44,7 @@ private:
 
 	static vk::PresentModeKHR chooseSwapPresentMode(const std::vector<vk::PresentModeKHR>& availablePresentModes);
 
-	static vk::Extent2D chooseSwapExtent(const vk::SurfaceCapabilitiesKHR& capabilities, GLFWwindow& window);
+	static vk::Extent2D chooseSwapExtent(const vk::SurfaceCapabilitiesKHR& capabilities, SDL_Window& window);
 
 	static uint32_t chooseSwapMinImageCount(const vk::SurfaceCapabilitiesKHR& surfaceCapabilities);
 

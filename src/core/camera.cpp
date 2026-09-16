@@ -22,6 +22,18 @@ glm::vec3 Camera::center() const {
 	return mCenter;
 }
 
+glm::vec3 Camera::front() const {
+	return mFront;
+}
+
+glm::vec3 Camera::right() const {
+	return mRight;
+}
+
+glm::vec3 Camera::up() const {
+	return mUp;
+}
+
 void Camera::configure(EventBus& eventBus) {
 	update();
 

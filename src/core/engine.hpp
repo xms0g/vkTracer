@@ -23,5 +23,6 @@ private:
 
 	bool isRunning{true};
     float mDeltaTime{0.0};
+	uint32_t mMillisecsPreviousFrame{0};
     double mSecondsPreviousFrame{0};
 };

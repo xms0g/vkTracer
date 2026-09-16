@@ -8,7 +8,10 @@ if (APPLE)
     add_definitions(-DVK_ENABLE_BETA_EXTENSIONS)
 endif ()
 
-find_package(glfw3 3.2 REQUIRED)
+find_package(SDL2 REQUIRED)
+if (SDL2_FOUND)
+    include_directories(${SDL2_INCLUDE_DIR})
+endif()
 find_package(Vulkan REQUIRED)
 find_program(SLANGC_EXECUTABLE slangc REQUIRED)
 
@@ -20,7 +23,7 @@ add_executable(${PROJECT_NAME}  ${SRC})
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${GLM_INCLUDE_DIRS})
 
-target_link_libraries(${PROJECT_NAME} PRIVATE glfw Vulkan::Vulkan)
+target_link_libraries(${PROJECT_NAME} PRIVATE ${SDL2_LIBRARIES} Vulkan::Vulkan)
 
 add_slang_shader_target(ParticleShaderTarget
         SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/shaders/main.slang"

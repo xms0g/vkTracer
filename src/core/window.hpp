@@ -1,24 +1,15 @@
 #pragma once
 #include <string>
-#define GLFW_INCLUDE_VULKAN  
-#include <GLFW/glfw3.h>
+#include <SDL.h>
 #include "baseWindow.hpp"
 
-class Window : public BaseWindow<GLFWwindow> {
+class Window : public BaseWindow<SDL_Window> {
 public:
 	Window() = default;
 
 	~Window() override;
 
 	void updateFpsCounter(double dt);
-
-	[[nodiscard]]
-	bool shouldClose() const;
-
-	[[nodiscard]]
-	bool windowResized() const;
-
-	void windowResized(bool resized);
 
 	void swapBuffer() override;
 
@@ -32,9 +23,4 @@ protected:
 	double mPreviousSeconds{0.0};
 	double mCurrentSeconds{0.0};
 	int mFrameCount{0};
-
-private:
-	static void framebufferResizeCallback(GLFWwindow *window, int width, int height);
-
-	bool mWindowResized{false};
 };

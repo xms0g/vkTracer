@@ -1,8 +1,8 @@
 #pragma once
 
 class EventBus;
-class Window;
+class SDL_Window;
 
 namespace Input {
-bool process(EventBus& eventBus, Window& window, float dt);
+bool process(EventBus& eventBus, SDL_Window* window, float dt);
 }

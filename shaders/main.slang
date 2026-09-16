@@ -43,6 +43,9 @@ struct PushConstants {
     uint height;
     uint sphereCount;
     float4 camCenter;
+    float4 camFront;
+    float4 camRight;
+    float4 camUp;
 };
 
 [[vk::push_constant]]
@@ -91,7 +94,7 @@ void compMain(uint3 threadId : SV_DispatchThreadID) {
         return;
 
     Camera camera = {pc.width, pc.height};
-    float3 pixColor = rayColor(camera.getRay(pixel.x, pixel.y, pc.camCenter.xyz));
+    float3 pixColor = rayColor(camera.getRay(pixel.x, pixel.y, pc.camCenter, pc.camFront, pc.camRight, pc.camUp));
 
-    pixelsOut[pixel] = float4((float3)pixColor, 1.0);
+    pixelsOut[pixel] = float4(pixColor, 1.0);
 }

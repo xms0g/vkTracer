@@ -1,53 +1,34 @@
 #include "window.hpp"
 
 Window::~Window() {
-	glfwDestroyWindow(mWindow);
-	glfwTerminate();
-}
-
-bool Window::shouldClose() const {
-	return glfwWindowShouldClose(mWindow);
-}
-
-bool Window::windowResized() const {
-	return mWindowResized;
-}
-
-void Window::windowResized(const bool resized) {
-	mWindowResized = resized;
+	SDL_DestroyWindow(mWindow);
+	SDL_Quit();
 }
 
 void Window::swapBuffer() {
-	glfwSwapBuffers(mWindow);
+	SDL_GL_SwapWindow(mWindow);
 }
 
-void Window::framebufferResizeCallback(GLFWwindow* window, int width, int height) {
-	const auto myWindow = static_cast<Window*>(glfwGetWindowUserPointer(window));
-
-	myWindow->windowResized(true);
-
-	glfwGetFramebufferSize(window, &width, &height);
-
-	while (width == 0 || height == 0) {
-		glfwGetFramebufferSize(window, &width, &height);
-		glfwWaitEvents();
-	}
-}
-
-void Window::initImpl(const char* title, const int width, const int height, bool fullscreen) {
+void Window::initImpl(const char* title, const int width, const int height, const bool fullscreen) {
 	m_title = title;
 
-	if (glfwInit() != GLFW_TRUE) {
-		throw std::runtime_error("Failed to initialize Window");
+	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+		throw std::runtime_error("Failed to initialize SDL_VIDEO");
 	}
 
-	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-	glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+	uint32_t flags = SDL_WINDOW_VULKAN;
 
-	mWindow = glfwCreateWindow(width, height, title, nullptr, nullptr);
+	if (fullscreen)
+		flags |= SDL_WINDOW_FULLSCREEN;
+	else
+		flags |= SDL_WINDOW_RESIZABLE;
 
-	glfwSetWindowUserPointer(mWindow, this);
-	glfwSetFramebufferSizeCallback(mWindow, framebufferResizeCallback);
+	mWindow = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, flags);
+
+	if (!mWindow) {
+		SDL_Quit();
+		throw std::runtime_error(SDL_GetError());
+	}
 }
 
 void Window::clearImpl(float r, float g, float b, float a) {
@@ -64,7 +45,7 @@ void Window::updateFpsCounter(const double dt) {
 
 		snprintf(tmp, 128, "%s @ fps: %.2f", m_title.c_str(), fps);
 
-		glfwSetWindowTitle(mWindow, tmp);
+		SDL_SetWindowTitle(mWindow, tmp);
 		mFrameCount = 0;
 	}
 
