@@ -19,7 +19,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/slangHelpers.cmake)
 
 file(GLOB_RECURSE SRC "src/*")
 
-add_executable(${PROJECT_NAME}  ${SRC})
+add_executable(${PROJECT_NAME} ${SRC})
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${GLM_INCLUDE_DIRS})
 

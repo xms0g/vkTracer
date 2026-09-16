@@ -387,8 +387,8 @@ void Device::createShaderStorageImage() {
 
 void Device::createSampler() {
 	constexpr vk::SamplerCreateInfo samplerInfo{
-		.magFilter = vk::Filter::eLinear,
-		.minFilter = vk::Filter::eLinear,
+		.magFilter = vk::Filter::eNearest,
+		.minFilter = vk::Filter::eNearest,
 		.mipmapMode = vk::SamplerMipmapMode::eNearest,
 		.addressModeU = vk::SamplerAddressMode::eClampToEdge,
 		.addressModeV = vk::SamplerAddressMode::eClampToEdge,
@@ -480,7 +480,7 @@ void Device::recordGraphicsCommandBuffer(const uint32_t imageIndex) {
 	};
 
 	const vk::RenderingInfo renderingInfo = {
-		.renderArea = {.offset = {0, 0}, .extent = mSwapchain.extent()},
+		.renderArea = {.offset = {.x = 0, .y = 0}, .extent = mSwapchain.extent()},
 		.layerCount = 1,
 		.colorAttachmentCount = 1,
 		.pColorAttachments = &attachmentInfo
@@ -559,7 +559,10 @@ void Device::recordComputeCommandBuffer() {
 		0,
 		vk::ArrayProxy<const ComputePushConstants>(pc));
 
-	(*commandBuffer).dispatch(WIDTH / THREADS_PER_GROUP, HEIGHT / THREADS_PER_GROUP, 1);
+	(*commandBuffer).dispatch(
+		(WIDTH + THREADS_PER_GROUP - 1) / THREADS_PER_GROUP,
+		(HEIGHT + THREADS_PER_GROUP - 1) / THREADS_PER_GROUP,
+		1);
 
 	Image::transitionImageLayout(
 		**mShaderStorageImages[mFrameIndex],
