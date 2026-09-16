@@ -16,6 +16,7 @@ bool Input::process(EventBus& eventBus, SDL_Window* window, const float dt) {
 				if (event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window)) {
 					return false;
 				}
+				break;
 			case SDL_MOUSEMOTION:
 				if (freeLook) {
 					eventBus.emitEvent<MouseMovementEvent>(
