@@ -76,11 +76,10 @@ bool hitAnything(Ray ray, constexpr float tmin, constexpr float tmax, inout HitR
     return hitAnything;
 }
 
-float3 rayColor(Ray ray, uint2 pixel, int sampleIdx, int depth) {
+float3 rayColor(Ray ray, int depth, uint seed) {
     float3 attenuation = float3(1.0);
     uint width = (uint)pc.resolution.x;
     uint height = (uint)pc.resolution.y;
-    uint seed = pixel.x + width * pixel.y + width * height * sampleIdx + 1;
 
     for (uint bounce = 0; bounce < depth; ++bounce) {
         HitRecord rec;
@@ -110,13 +109,13 @@ void compMain(uint3 threadId : SV_DispatchThreadID) {
     if (pixel.x >= width || pixel.y >= height)
         return;
 
-
     Camera camera = {width, height};
 
     float3 pixColor = float3(0.0);
     for (int i = 0; i < SAMPLES_PER_PIXEL; ++i) {
-        Ray ray = camera.getRay(pixel.x, pixel.y, i, pc.camCenter, pc.camFront, pc.camRight, pc.camUp);
-        pixColor += rayColor(ray, pixel, i, MAX_DEPTH);
+        uint seed = pixel.x + pixel.y * width + i * width * height + 1;
+        Ray ray = camera.getRay(pixel.x, pixel.y, pc.camCenter, pc.camFront, pc.camRight, pc.camUp, seed);
+        pixColor += rayColor(ray, MAX_DEPTH, seed);
     }
 
     pixelsOut[pixel] = float4(pixColor * PIXEL_SAMPLES_SCALE, 1.0);

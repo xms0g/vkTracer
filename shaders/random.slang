@@ -1,24 +1,17 @@
 module random;
 __include "rng";
 
-float random(uint seed) {
-    RNG rng = {seed};
+float random(inout RNG rng) {
     return rng.nextFloat();
 }
 
-float random(float min, float max, uint seed) {
-    return min + (max - min) * random(seed);
+float random(float min, float max, inout RNG rng) {
+    return min + (max - min) * random(rng);
 }
 
-public float3 randomUnitVector(uint seed) {
-    RNG rng = {seed};
-
+float3 randomUnitVector(inout RNG rng) {
     for(;;) {
-        float3 p = float3(
-            rng.nextFloat() * 2.0 - 1.0,
-            rng.nextFloat() * 2.0 - 1.0,
-            rng.nextFloat() * 2.0 - 1.0);
-
+        float3 p = float3(random(-1, 1, rng), random(-1, 1, rng), random(-1, 1, rng));
         float lensq = dot(p, p);
 
         if (1e-8f < lensq && lensq <= 1) {
@@ -28,7 +21,8 @@ public float3 randomUnitVector(uint seed) {
 }
 
 public float3 randomOnHemisphere(const float3 N, uint seed) {
-    float3 onUnitSphere = randomUnitVector(seed);
+    RNG rng = {seed};
+    float3 onUnitSphere = randomUnitVector(rng);
 
     if (dot(onUnitSphere, N) > 0.0) {
         return onUnitSphere;
