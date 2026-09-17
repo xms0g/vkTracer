@@ -92,8 +92,7 @@ private:
 	static bool checkDeviceSuitable(const vk::raii::PhysicalDevice& phyDevice);
 
 	struct ComputePushConstants {
-		uint32_t width;
-		uint32_t height;
+		alignas(16) glm::vec4 resolution;
 		alignas(16) glm::vec4 camCenter;
 		alignas(16) glm::vec4 camFront;
 		alignas(16) glm::vec4 camRight;

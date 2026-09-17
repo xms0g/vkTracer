@@ -545,8 +545,7 @@ void Device::recordComputeCommandBuffer() {
 		{mComputeDescriptorSets[mFrameIndex]}, {});
 
 	const ComputePushConstants pc{
-		.width = WIDTH,
-		.height = HEIGHT,
+		.resolution = glm::vec4(WIDTH, HEIGHT, 0,0),
 		.camCenter = glm::vec4(mCamera.center(), 0.0f),
 		.camFront = glm::vec4(mCamera.front(), 0.0f),
 		.camRight = glm::vec4(mCamera.right(), 0.0f),

@@ -40,8 +40,7 @@ import camera;
 import random;
 
 struct PushConstants {
-    uint width;
-    uint height;
+    float4 resolution;
     float4 camCenter;
     float4 camFront;
     float4 camRight;
@@ -79,7 +78,9 @@ bool hitAnything(Ray ray, constexpr float tmin, constexpr float tmax, inout HitR
 
 float3 rayColor(Ray ray, uint2 pixel, int sampleIdx, int depth) {
     float3 attenuation = float3(1.0);
-    uint seed = pixel.x + pc.width * pixel.y + pc.width * pc.height * sampleIdx + 1;
+    uint width = (uint)pc.resolution.x;
+    uint height = (uint)pc.resolution.y;
+    uint seed = pixel.x + width * pixel.y + width * height * sampleIdx + 1;
 
     for (uint bounce = 0; bounce < depth; ++bounce) {
         HitRecord rec;
@@ -103,11 +104,14 @@ float3 rayColor(Ray ray, uint2 pixel, int sampleIdx, int depth) {
 [numthreads(8,8,1)]
 void compMain(uint3 threadId : SV_DispatchThreadID) {
     uint2 pixel = threadId.xy;
+    uint width = (uint)pc.resolution.x;
+    uint height = (uint)pc.resolution.y;
 
-    if (pixel.x >= pc.width || pixel.y >= pc.height)
+    if (pixel.x >= width || pixel.y >= height)
         return;
 
-    Camera camera = {pc.width, pc.height};
+
+    Camera camera = {width, height};
 
     float3 pixColor = float3(0.0);
     for (int i = 0; i < SAMPLES_PER_PIXEL; ++i) {
