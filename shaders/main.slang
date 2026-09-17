@@ -56,11 +56,12 @@ RWTexture2D<float4> pixelsOut;
 [[vk::binding(1, 0)]]
 StructuredBuffer<Sphere> spheres;
 
+static constexpr float FLT_MAX = 3.402823466e+38f;
 static constexpr int MAX_DEPTH = 10;
 static constexpr int SAMPLES_PER_PIXEL = 50;
 static constexpr float PIXEL_SAMPLES_SCALE = 1.0 / SAMPLES_PER_PIXEL;
 
-bool hitAnything(Ray ray, constexpr float tmin, constexpr float tmax, inout HitRecord rec) {
+bool hitAnything(Ray ray, float tmin, float tmax, inout HitRecord rec) {
     bool hitAnything = false;
     float closestSoFar = tmax;
 
@@ -77,6 +78,7 @@ bool hitAnything(Ray ray, constexpr float tmin, constexpr float tmax, inout HitR
 }
 
 float3 rayColor(Ray ray, int depth, uint seed) {
+    Ray scattered = ray;
     float3 attenuation = float3(1.0);
     uint width = (uint)pc.resolution.x;
     uint height = (uint)pc.resolution.y;
@@ -84,13 +86,13 @@ float3 rayColor(Ray ray, int depth, uint seed) {
     for (uint bounce = 0; bounce < depth; ++bounce) {
         HitRecord rec;
 
-        if (hitAnything(ray, 0.001, 1000.0, rec)) {
+        if (hitAnything(scattered, 0.001, FLT_MAX, rec)) {
             float3 dir = randomOnHemisphere(rec.normal, seed++);
 
-            ray = {rec.point, dir};
+            scattered = {rec.point, dir};
             attenuation *= 0.5;
         } else {
-            float3 unitDir = normalize(ray.direction);
+            float3 unitDir = normalize(scattered.direction);
             float a = 0.5 * (unitDir.y + 1.0);
             return attenuation * lerp(float3(1.0, 1.0, 1.0), float3(0.5, 0.7, 1.0), a);
         }
