@@ -37,6 +37,7 @@ import ray;
 import sphere;
 import hitRecord;
 import camera;
+import random;
 
 struct PushConstants {
     uint width;
@@ -56,7 +57,8 @@ RWTexture2D<float4> pixelsOut;
 [[vk::binding(1, 0)]]
 StructuredBuffer<Sphere> spheres;
 
-static constexpr int SAMPLES_PER_PIXEL = 100;
+static constexpr int MAX_DEPTH = 5;
+static constexpr int SAMPLES_PER_PIXEL = 50;
 static constexpr float PIXEL_SAMPLES_SCALE = 1.0 / SAMPLES_PER_PIXEL;
 
 bool hitAnything(Ray ray, constexpr float tmin, constexpr float tmax, inout HitRecord rec) {
@@ -75,16 +77,27 @@ bool hitAnything(Ray ray, constexpr float tmin, constexpr float tmax, inout HitR
     return hitAnything;
 }
 
-float3 rayColor(Ray ray) {
-    HitRecord rec;
+float3 rayColor(Ray ray, int sampleIdx, int depth) {
+    Ray scatteredRay = ray;
+    float3 attenuation = float3(1.0);
+    uint seed = pc.width + pc.width * pc.height * sampleIdx + 1;
 
-    if (hitAnything(ray, 0.001, 1000.0, rec)) {
-        return 0.5 * (rec.normal + float3(1,1,1));
+    for (uint bounce = 0; bounce < depth; ++bounce) {
+        HitRecord rec;
+
+        if (hitAnything(scatteredRay, 0.001, 1000.0, rec)) {
+            float3 dir = randomOnHemisphere(rec.normal, seed++);
+
+            scatteredRay = {rec.point, dir};
+            attenuation *= 0.5;
+        } else {
+            float3 unitDir = normalize(ray.direction);
+            float a = 0.5 * (unitDir.y + 1.0);
+            return attenuation * lerp(float3(1.0, 1.0, 1.0), float3(0.0, 0.7, 1.0), a);
+        }
     }
 
-    float3 unitDir = normalize(ray.direction);
-    float a = 0.5 * (unitDir.y + 1.0);
-    return lerp(float3(1.0, 1.0, 1.0), float3(0.0, 0.7, 1.0), a);
+    return float3(0);
 }
 
 [shader("compute")]
@@ -100,7 +113,7 @@ void compMain(uint3 threadId : SV_DispatchThreadID) {
     float3 pixColor = float3(0.0);
     for (int i = 0; i < SAMPLES_PER_PIXEL; ++i) {
         Ray ray = camera.getRay(pixel.x, pixel.y, i, pc.camCenter, pc.camFront, pc.camRight, pc.camUp);
-        pixColor += rayColor(ray);
+        pixColor += rayColor(ray, i, MAX_DEPTH);
     }
 
     pixelsOut[pixel] = float4(pixColor * PIXEL_SAMPLES_SCALE, 1.0);
