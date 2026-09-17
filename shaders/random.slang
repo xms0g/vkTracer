@@ -1,38 +1,48 @@
 module random;
 __include "rng";
 
-float random(inout RNG rng) {
-    return rng.nextFloat();
-}
+public struct Random {
+    private RNG rng;
 
-float random(float min, float max, inout RNG rng) {
-    return min + (max - min) * random(rng);
-}
+    public __init(uint seed) {
+        rng = {seed};
+    }
 
-float3 randomUnitVector(inout RNG rng) {
-    for(;;) {
-        float3 p = float3(random(-1, 1, rng), random(-1, 1, rng), random(-1, 1, rng));
-        float lensq = dot(p, p);
+    [mutating]
+    float random() {
+        return rng.nextFloat();
+    }
 
-        if (1e-8f < lensq && lensq <= 1) {
-            return normalize(p);
+    [mutating]
+    float random(float min, float max) {
+        return min + (max - min) * random();
+    }
+
+    [mutating]
+    float3 randomUnitVector() {
+        for(;;) {
+            float3 p = float3(random(-1, 1), random(-1, 1), random(-1, 1));
+            float lensq = dot(p, p);
+
+            if (1e-8f < lensq && lensq <= 1) {
+                return normalize(p);
+            }
         }
     }
-}
 
-public float3 randomOnHemisphere(const float3 N, uint seed) {
-    RNG rng = {seed};
-    float3 onUnitSphere = randomUnitVector(rng);
+    [mutating]
+    public float3 randomOnHemisphere(const float3 N) {
+        float3 onUnitSphere = randomUnitVector();
 
-    if (dot(onUnitSphere, N) > 0.0) {
-        return onUnitSphere;
+        if (dot(onUnitSphere, N) > 0.0) {
+            return onUnitSphere;
+        }
+
+        return -onUnitSphere;
     }
 
-    return -onUnitSphere;
-}
-
-public float3 sampleSquare(uint seed) {
-    RNG rng = {seed};
-    return float3(rng.nextFloat() - 0.5, rng.nextFloat() - 0.5, 0.0);
-}
-
+    [mutating]
+    public float3 sampleSquare() {
+        return float3(rng.nextFloat() - 0.5, rng.nextFloat() - 0.5, 0.0);
+    }
+};

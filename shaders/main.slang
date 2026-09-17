@@ -77,7 +77,7 @@ bool hitAnything(Ray ray, float tmin, float tmax, inout HitRecord rec) {
     return hitAnything;
 }
 
-float3 rayColor(Ray ray, int depth, uint seed) {
+float3 rayColor(Ray ray, int depth, inout Random random) {
     Ray scattered = ray;
     float3 attenuation = float3(1.0);
     uint width = (uint)pc.resolution.x;
@@ -87,7 +87,7 @@ float3 rayColor(Ray ray, int depth, uint seed) {
         HitRecord rec;
 
         if (hitAnything(scattered, 0.001, FLT_MAX, rec)) {
-            float3 dir = randomOnHemisphere(rec.normal, seed++);
+            float3 dir = random.randomOnHemisphere(rec.normal);
 
             scattered = {rec.point, dir};
             attenuation *= 0.5;
@@ -116,8 +116,10 @@ void compMain(uint3 threadId : SV_DispatchThreadID) {
     float3 pixColor = float3(0.0);
     for (int i = 0; i < SAMPLES_PER_PIXEL; ++i) {
         uint seed = pixel.x + pixel.y * width + i * width * height + 1;
-        Ray ray = camera.getRay(pixel.x, pixel.y, pc.camCenter, pc.camFront, pc.camRight, pc.camUp, seed);
-        pixColor += rayColor(ray, MAX_DEPTH, seed);
+        Random random = {seed};
+
+        Ray ray = camera.getRay(pixel.x, pixel.y, pc.camCenter, pc.camFront, pc.camRight, pc.camUp, random);
+        pixColor += rayColor(ray, MAX_DEPTH, random);
     }
 
     pixelsOut[pixel] = float4(pixColor * PIXEL_SAMPLES_SCALE, 1.0);

@@ -17,7 +17,7 @@ public struct Camera {
         this.viewportWidth = viewportHeight * (float(width)/height);
     }
 
-    public Ray getRay(int x, int y, float4 center, float4 front, float4 right, float4 up, uint seed) {
+    public Ray getRay(int x, int y, float4 center, float4 front, float4 right, float4 up, inout Random random) {
         float3 viewportU = right.xyz * viewportWidth;
         float3 viewportV = up.xyz * -viewportHeight;
 
@@ -29,7 +29,7 @@ public struct Camera {
 
         float3 pixel00Loc = viewportUpperLeft + 0.5 * (pixDeltaU + pixDeltaV);
 
-        float3 offset = sampleSquare(seed);
+        float3 offset = random.sampleSquare();
         float3 pixelSample = pixel00Loc + (pixDeltaU * (x + offset.x)) + (pixDeltaV * (y + offset.y));
 
         float3 rayDir = normalize(pixelSample - center.xyz);
