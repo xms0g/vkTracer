@@ -14,7 +14,7 @@ public struct Random {
     }
 
     [mutating]
-    float3 randomUnitVector() {
+    public float3 randomUnitVector() {
         for(;;) {
             float3 p = float3(random(-1, 1), random(-1, 1), random(-1, 1));
             float lensq = dot(p, p);

@@ -38,6 +38,7 @@ import sphere;
 import hitRecord;
 import camera;
 import random;
+import color;
 
 struct PushConstants {
     float4 resolution;
@@ -87,7 +88,7 @@ float3 rayColor(Ray ray, int depth, inout Random random) {
         HitRecord rec;
 
         if (hitAnything(scattered, 0.001, FLT_MAX, rec)) {
-            float3 dir = random.randomOnHemisphere(rec.normal);
+            float3 dir = rec.normal + random.randomUnitVector();
 
             scattered = {rec.point, dir};
             attenuation *= 0.5;
@@ -122,5 +123,6 @@ void compMain(uint3 threadId : SV_DispatchThreadID) {
         pixColor += rayColor(ray, MAX_DEPTH, random);
     }
 
-    pixelsOut[pixel] = float4(pixColor * PIXEL_SAMPLES_SCALE, 1.0);
+    float3 color = pixColor * PIXEL_SAMPLES_SCALE;
+    pixelsOut[pixel] = float4(linear2gamma(color), 1.0);
 }
