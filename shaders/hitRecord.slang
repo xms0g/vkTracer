@@ -6,12 +6,16 @@ public enum MaterialType: uint {
 	Metal
 };
 
+public struct Material {
+	public float3 color;
+	public MaterialType type;
+};
+
 public struct HitRecord {
     private float3 p;
     private float3 n;
     private float t;
-    private MaterialType mat;
-    private float3 hitColor;
+    private Material mat;
     private bool frontFace;
 
     public property float3 point {
@@ -26,13 +30,9 @@ public struct HitRecord {
         get { return t; }
         set { t = newValue; }
     }
-    public property MaterialType material {
+    public property Material material {
         get { return mat; }
         set { mat = newValue; }
-    }
-    public property float3 color {
-        get { return hitColor; }
-        set { hitColor = newValue; }
     }
 
     [mutating]

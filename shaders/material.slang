@@ -48,13 +48,13 @@ public bool scatterMaterial(Ray ray,
                             inout Ray scattered,
                             inout Random random) {
 
-    if (rec.material == MaterialType::Lambertian) {
-        Lambertian mat = Lambertian(rec.color);
+    if (rec.material.type == MaterialType::Lambertian) {
+        Lambertian mat = Lambertian(rec.material.color);
         return mat.scatter(ray, rec, attenuation, scattered, random);
     }
 
-    if (rec.material == MaterialType::Metal) {
-        Metal mat = Metal(rec.color);
+    if (rec.material.type == MaterialType::Metal) {
+        Metal mat = Metal(rec.material.color);
         return mat.scatter(ray, rec, attenuation, scattered, random);
     }
 
