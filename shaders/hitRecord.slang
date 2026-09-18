@@ -9,7 +9,7 @@ public enum MaterialType: uint {
 public struct Material {
 	public float4 color;
 	public MaterialType type;
-	float fuzz;
+	public float fuzz;
 	uint2 pad;
 };
 

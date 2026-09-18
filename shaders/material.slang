@@ -3,17 +3,7 @@ import ray;
 import hitRecord;
 import random;
 
-interface IMaterial {
-    bool scatter(Ray in, HitRecord rec, inout float3 attenuation, inout Ray scattered, inout Random random);
-};
-
-struct Lambertian: IMaterial {
-    private float3 albedo;
-
-    __init(float3 albedo) {
-        this.albedo = albedo;
-    }
-
+namespace Lambertian {
     bool scatter(Ray in, HitRecord rec, inout float3 attenuation, inout Ray scattered, inout Random random) {
         float3 scatterDir = rec.normal + random.randomUnitVector();
 
@@ -22,23 +12,19 @@ struct Lambertian: IMaterial {
             scatterDir = rec.normal;
         }
         scattered = {rec.point, scatterDir};
-        attenuation = albedo;
+        attenuation = rec.material.color.rgb;
         return true;
     }
 };
 
-struct Metal: IMaterial {
-    private float3 albedo;
-
-    __init(float3 albedo) {
-        this.albedo = albedo;
-    }
-
+namespace Metal {
     bool scatter(Ray in, HitRecord rec, inout float3 attenuation, inout Ray scattered, inout Random random) {
+        float fuzz = rec.material.fuzz < 1.0 ? rec.material.fuzz : 1.0;
         float3 reflected = reflect(in.direction, rec.normal);
+        reflected = normalize(reflected) + (fuzz * random.randomUnitVector());
         scattered = {rec.point, reflected};
-        attenuation = albedo;
-        return true;
+        attenuation = rec.material.color.rgb;
+        return (dot(scattered.direction, rec.normal) > 0);
     }
 };
 
@@ -49,13 +35,11 @@ public bool scatterMaterial(Ray ray,
                             inout Random random) {
 
     if (rec.material.type == MaterialType::Lambertian) {
-        Lambertian mat = Lambertian(rec.material.color.rgb);
-        return mat.scatter(ray, rec, attenuation, scattered, random);
+        return Lambertian::scatter(ray, rec, attenuation, scattered, random);
     }
 
     if (rec.material.type == MaterialType::Metal) {
-        Metal mat = Metal(rec.material.color.rgb);
-        return mat.scatter(ray, rec, attenuation, scattered, random);
+        return Metal::scatter(ray, rec, attenuation, scattered, random);
     }
 
     return false;

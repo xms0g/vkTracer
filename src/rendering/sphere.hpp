@@ -25,7 +25,8 @@ struct Sphere {
 				.radius = 0.5f,
 				.mat = {
 					.albedo = {0.8, 0.8, 0.8, 0.0},
-					.type = MaterialType::Metal
+					.type = MaterialType::Metal,
+					.fuzz = 0.3f
 				}
 			},
 			{
@@ -33,7 +34,8 @@ struct Sphere {
 				.radius = 0.5f,
 				.mat = {
 					.albedo = {0.8, 0.6, 0.2, 0.0},
-					.type = MaterialType::Metal
+					.type = MaterialType::Metal,
+					.fuzz = 1.0f
 				}
 			},
 			{
