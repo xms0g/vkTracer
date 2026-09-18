@@ -19,7 +19,7 @@ namespace Lambertian {
 
 namespace Metal {
     bool scatter(Ray in, HitRecord rec, inout float3 attenuation, inout Ray scattered, inout Random random) {
-        float fuzz = rec.material.fuzz < 1.0 ? rec.material.fuzz : 1.0;
+        float fuzz = min(rec.material.fuzz, 1.0);
         float3 reflected = reflect(in.direction, rec.normal);
         reflected = normalize(reflected) + (fuzz * random.randomUnitVector());
         scattered = {rec.point, reflected};
@@ -33,7 +33,6 @@ public bool scatterMaterial(Ray ray,
                             inout float3 attenuation,
                             inout Ray scattered,
                             inout Random random) {
-
     if (rec.material.type == MaterialType::Lambertian) {
         return Lambertian::scatter(ray, rec, attenuation, scattered, random);
     }
