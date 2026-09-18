@@ -6,6 +6,7 @@ public struct Camera {
     private uint width;
     private uint height;
     private float focal;
+    private float vfov;
     private float viewportHeight;
     private float viewportWidth;
 
