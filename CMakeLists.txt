@@ -25,10 +25,10 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${GLM_INCLUDE_DIRS})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${SDL2_LIBRARIES} Vulkan::Vulkan)
 
-add_slang_shader_target(ParticleShaderTarget
+add_slang_shader_target(ShaderTarget
         SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/shaders/main.slang"
         OUTPUT_NAME "main.spv")
-add_dependencies(${PROJECT_NAME} ParticleShaderTarget)
+add_dependencies(${PROJECT_NAME} ShaderTarget)
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE
         SHADER_BINARY_DIR="${CMAKE_CURRENT_BINARY_DIR}/shaders/"

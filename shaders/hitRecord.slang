@@ -7,8 +7,10 @@ public enum MaterialType: uint {
 };
 
 public struct Material {
-	public float3 color;
+	public float4 color;
 	public MaterialType type;
+	float fuzz;
+	uint2 pad;
 };
 
 public struct HitRecord {

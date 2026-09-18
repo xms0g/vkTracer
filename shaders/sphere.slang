@@ -4,11 +4,12 @@ import hitRecord;
 import material;
 
 public struct Sphere {
-    private float3 center;
-    private float radius;
+    private float4 centerRadius;
     private Material mat;
 
     public bool hit(Ray ray, float tmin, float tmax, inout HitRecord rec) {
+        float3 center = centerRadius.xyz;
+        float radius = centerRadius.w;
         float3 oc = center - ray.origin;
         float a = dot(ray.direction, ray.direction);
         float h = dot(ray.direction, oc);

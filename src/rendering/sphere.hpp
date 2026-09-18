@@ -7,8 +7,10 @@ enum class MaterialType: uint32_t {
 };
 
 struct Material {
-	glm::vec3 albedo;
+	glm::vec4 albedo;
 	MaterialType type;
+	float fuzz;
+	uint32_t pad[2];
 };
 
 struct Sphere {
@@ -22,7 +24,7 @@ struct Sphere {
 				.center = {-1.0, 0.0, -1.0f},
 				.radius = 0.5f,
 				.mat = {
-					.albedo = {0.8, 0.8, 0.8},
+					.albedo = {0.8, 0.8, 0.8, 0.0},
 					.type = MaterialType::Metal
 				}
 			},
@@ -30,7 +32,7 @@ struct Sphere {
 				.center = {1.0, 0.0, -1.0},
 				.radius = 0.5f,
 				.mat = {
-					.albedo = {0.8, 0.6, 0.2},
+					.albedo = {0.8, 0.6, 0.2, 0.0},
 					.type = MaterialType::Metal
 				}
 			},
@@ -38,7 +40,7 @@ struct Sphere {
 				.center = {0.0f, 0.0f, -1.0f},
 				.radius = 0.5f,
 				.mat = {
-					.albedo = {0.1, 0.2, 0.5},
+					.albedo = {0.1, 0.2, 0.5, 0.0},
 					.type = MaterialType::Lambertian
 				}
 			},
@@ -46,7 +48,7 @@ struct Sphere {
 				.center = {0.0f, -100.5f, -1.0f},
 				.radius = 100.0f,
 				.mat = {
-					.albedo = {0.8, 0.8, 0.0},
+					.albedo = {0.8, 0.8, 0.0, 0.0},
 					.type = MaterialType::Lambertian
 				}
 			}
