@@ -1,10 +1,13 @@
 module sphere;
 import ray;
 import hitRecord;
+import material;
 
 public struct Sphere {
     private float3 center;
     private float radius;
+    private float3 color;
+    private MaterialType mat;
 
     public bool hit(Ray ray, float tmin, float tmax, inout HitRecord rec) {
         float3 oc = center - ray.origin;
@@ -30,6 +33,8 @@ public struct Sphere {
 
         rec.interval = root;
         rec.point = ray.at(rec.interval);
+        rec.material = mat;
+        rec.color = color;
 
         float3 outwardNormal = (rec.point - center) / radius;
         rec.setFaceNormal(ray, outwardNormal);

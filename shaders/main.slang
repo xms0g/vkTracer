@@ -39,6 +39,7 @@ import hitRecord;
 import camera;
 import random;
 import color;
+import material;
 
 struct PushConstants {
     float4 resolution;
@@ -67,9 +68,7 @@ bool hitAnything(Ray ray, float tmin, float tmax, inout HitRecord rec) {
     float closestSoFar = tmax;
 
     for (uint i = 0; i < spheres.getCount(); ++i) {
-        Sphere sphere = spheres[i];
-
-        if (sphere.hit(ray, tmin, closestSoFar, rec)) {
+        if (spheres[i].hit(ray, tmin, closestSoFar, rec)) {
             hitAnything = true;
             closestSoFar = rec.interval;
         }
@@ -79,7 +78,7 @@ bool hitAnything(Ray ray, float tmin, float tmax, inout HitRecord rec) {
 }
 
 float3 rayColor(Ray ray, int depth, inout Random random) {
-    Ray scattered = ray;
+    Ray r = ray;
     float3 attenuation = float3(1.0);
     uint width = (uint)pc.resolution.x;
     uint height = (uint)pc.resolution.y;
@@ -87,13 +86,18 @@ float3 rayColor(Ray ray, int depth, inout Random random) {
     for (uint bounce = 0; bounce < depth; ++bounce) {
         HitRecord rec;
 
-        if (hitAnything(scattered, 0.001, FLT_MAX, rec)) {
-            float3 dir = rec.normal + random.randomUnitVector();
+        if (hitAnything(r, 0.001, FLT_MAX, rec)) {
+            Ray scattered;
+            float3 atten;
 
-            scattered = {rec.point, dir};
-            attenuation *= 0.5;
+            if (scatterMaterial(r, rec, atten, scattered, random)) {
+                attenuation *= atten;
+                r = scattered;
+            } else {
+                return float3(0.0);
+            }
         } else {
-            float3 unitDir = normalize(scattered.direction);
+            float3 unitDir = normalize(r.direction);
             float a = 0.5 * (unitDir.y + 1.0);
             return attenuation * lerp(float3(1.0, 1.0, 1.0), float3(0.5, 0.7, 1.0), a);
         }
