@@ -332,7 +332,7 @@ void Device::createDescriptorPool() {
 }
 
 void Device::createShaderStorageBuffers() {
-	const auto spheres = Sphere::generateSpheres(2);
+	const auto spheres = Sphere::generateSpheres();
 	const vk::DeviceSize bufferSize = sizeof(Sphere) * spheres.size();
 
 	// Create a staging buffer used to upload data to the gpu

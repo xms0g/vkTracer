@@ -3,18 +3,18 @@ import ray;
 import hitRecord;
 import random;
 
-public interface IMaterial {
-    public bool scatter(Ray in, HitRecord rec, inout float3 attenuation, inout Ray scattered, inout Random random);
+interface IMaterial {
+    bool scatter(Ray in, HitRecord rec, inout float3 attenuation, inout Ray scattered, inout Random random);
 };
 
-public struct Lambertian: IMaterial {
+struct Lambertian: IMaterial {
     private float3 albedo;
 
-    public __init(float3 albedo) {
+    __init(float3 albedo) {
         this.albedo = albedo;
     }
 
-    public bool scatter(Ray in, HitRecord rec, inout float3 attenuation, inout Ray scattered, inout Random random) {
+    bool scatter(Ray in, HitRecord rec, inout float3 attenuation, inout Ray scattered, inout Random random) {
         float3 scatterDir = rec.normal + random.randomUnitVector();
 
         // Return true if the vector is close to zero in all dimensions.
@@ -27,14 +27,14 @@ public struct Lambertian: IMaterial {
     }
 };
 
-public struct Metal: IMaterial {
+struct Metal: IMaterial {
     private float3 albedo;
 
-    public __init(float3 albedo) {
+    __init(float3 albedo) {
         this.albedo = albedo;
     }
 
-    public bool scatter(Ray in, HitRecord rec, inout float3 attenuation, inout Ray scattered, inout Random random) {
+    bool scatter(Ray in, HitRecord rec, inout float3 attenuation, inout Ray scattered, inout Random random) {
         float3 reflected = reflect(in.direction, rec.normal);
         scattered = {rec.point, reflected};
         attenuation = albedo;

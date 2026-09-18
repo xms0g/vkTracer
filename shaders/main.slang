@@ -118,11 +118,11 @@ void compMain(uint3 threadId : SV_DispatchThreadID) {
 
     Camera camera = {width, height};
 
+    uint seed = pixel.x + pixel.y * width + width * height + 1;
+    Random random = {seed};
+
     float3 pixColor = float3(0.0);
     for (int i = 0; i < SAMPLES_PER_PIXEL; ++i) {
-        uint seed = pixel.x + pixel.y * width + i * width * height + 1;
-        Random random = {seed};
-
         Ray ray = camera.getRay(pixel.x, pixel.y, pc.camCenter, pc.camFront, pc.camRight, pc.camUp, random);
         pixColor += rayColor(ray, MAX_DEPTH, random);
     }

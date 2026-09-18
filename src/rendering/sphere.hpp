@@ -12,7 +12,7 @@ struct Sphere {
 	glm::vec3 albedo;
 	MaterialType mat;
 
-	static std::vector<Sphere> generateSpheres(const uint32_t count) {
+	static std::vector<Sphere> generateSpheres() {
 		std::vector<Sphere> spheres = {
 			{
 				.center = {-1.0, 0.0, -1.0f},
