@@ -9,6 +9,11 @@ public struct Random {
     }
 
     [mutating]
+    public float random() {
+        return rng.nextFloat();
+    }
+
+    [mutating]
     float random(float min, float max) {
         return min + (max - min) * rng.nextFloat();
     }

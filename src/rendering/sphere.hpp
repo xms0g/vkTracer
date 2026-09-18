@@ -3,14 +3,16 @@
 
 enum class MaterialType: uint32_t {
 	Lambertian = 0,
-	Metal = 1
+	Metal = 1,
+	Dielectric = 2
 };
 
 struct Material {
 	glm::vec4 albedo;
 	MaterialType type;
 	float fuzz;
-	uint32_t pad[2];
+	float refractionIndex;
+	uint32_t pad;
 };
 
 struct Sphere {
@@ -23,8 +25,8 @@ struct Sphere {
 				.centerRadius = {-1.0, 0.0, -1.0f, 0.5f},
 				.mat = {
 					.albedo = {0.8, 0.8, 0.8, 0.0},
-					.type = MaterialType::Metal,
-					.fuzz = 0.3f
+					.type = MaterialType::Dielectric,
+					.refractionIndex = 1.0 / 1.33
 				}
 			},
 			{

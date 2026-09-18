@@ -28,6 +28,31 @@ namespace Metal {
     }
 };
 
+namespace Dielectric {
+    bool scatter(Ray in, HitRecord rec, inout float3 attenuation, inout Ray scattered, inout Random random) {
+        attenuation = {1.0, 1.0, 1.0};
+        float ri = rec.frontFace ? (1.0/rec.material.refractionIndex) : rec.material.refractionIndex;
+        float3 unitDir = normalize(in.direction);
+        float cosTheta = min(dot(-unitDir, rec.normal), 1.0);
+        float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
+
+        float3 dir;
+        if (ri * sinTheta > 1.0 || reflectance(cosTheta, ri) > random.random()) {
+            dir = reflect(unitDir, rec.normal);
+        } else {
+            dir = refract(unitDir, rec.normal, ri);
+        }
+        scattered = {rec.point, dir};
+        return true;
+    }
+
+    float reflectance(float cosine, float refractionIndex) {
+        float r0 = (1 - refractionIndex) / (1 + refractionIndex);
+        r0 = r0 * r0;
+        return r0 + (1 - r0) * pow((1 - cosine), 5);
+    }
+}
+
 public bool scatterMaterial(Ray ray,
                             HitRecord rec,
                             inout float3 attenuation,
@@ -39,6 +64,10 @@ public bool scatterMaterial(Ray ray,
 
     if (rec.material.type == MaterialType::Metal) {
         return Metal::scatter(ray, rec, attenuation, scattered, random);
+    }
+
+    if (rec.material.type == MaterialType::Dielectric) {
+        return Dielectric::scatter(ray, rec, attenuation, scattered, random);
     }
 
     return false;

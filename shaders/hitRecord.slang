@@ -3,14 +3,16 @@ import ray;
 
 public enum MaterialType: uint {
 	Lambertian,
-	Metal
+	Metal,
+	Dielectric
 };
 
 public struct Material {
 	public float4 color;
 	public MaterialType type;
 	public float fuzz;
-	uint2 pad;
+	public float refractionIndex;
+	uint pad;
 };
 
 public struct HitRecord {
@@ -18,7 +20,7 @@ public struct HitRecord {
     private float3 n;
     private float t;
     private Material mat;
-    private bool frontFace;
+    private bool ff;
 
     public property float3 point {
         get { return p; }
@@ -36,10 +38,14 @@ public struct HitRecord {
         get { return mat; }
         set { mat = newValue; }
     }
+    public property bool frontFace {
+        get { return ff; }
+        set { ff = newValue; }
+    }
 
     [mutating]
     public void setFaceNormal(Ray ray, float3 outwardNormal) {
-        frontFace = dot(ray.direction, outwardNormal) < 0;
-        n = frontFace ? outwardNormal : -outwardNormal;
+        ff = dot(ray.direction, outwardNormal) < 0;
+        n = ff ? outwardNormal : -outwardNormal;
     }
 };
