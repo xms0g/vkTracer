@@ -90,7 +90,7 @@ float3 rayColor(Ray ray, int depth, inout Random random) {
             Ray scattered;
             float3 atten;
 
-            if (scatterMaterial(r, rec, atten, scattered, random)) {
+            if (scatter(r, rec, atten, scattered, random)) {
                 attenuation *= atten;
                 r = scattered;
             } else {

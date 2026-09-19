@@ -53,11 +53,11 @@ namespace Dielectric {
     }
 }
 
-public bool scatterMaterial(Ray ray,
-                            HitRecord rec,
-                            inout float3 attenuation,
-                            inout Ray scattered,
-                            inout Random random) {
+public bool scatter(Ray ray,
+                    HitRecord rec,
+                    inout float3 attenuation,
+                    inout Ray scattered,
+                    inout Random random) {
     if (rec.material.type == MaterialType::Lambertian) {
         return Lambertian::scatter(ray, rec, attenuation, scattered, random);
     }
