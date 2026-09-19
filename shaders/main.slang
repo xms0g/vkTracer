@@ -66,7 +66,7 @@ static constexpr float VFOV = 90.0;
 static constexpr int SAMPLES_PER_PIXEL = 50;
 static constexpr float PIXEL_SAMPLES_SCALE = 1.0 / SAMPLES_PER_PIXEL;
 
-bool hitAnything(Ray ray, float tmin, float tmax, inout HitRecord rec) {
+bool hitScene(Ray ray, float tmin, float tmax, inout HitRecord rec) {
     bool hitAnything = false;
     float closestSoFar = tmax;
 
@@ -89,7 +89,7 @@ float3 rayColor(Ray ray, int depth, inout Random random) {
     for (uint bounce = 0; bounce < depth; ++bounce) {
         HitRecord rec;
 
-        if (hitAnything(r, 0.001, FLT_MAX, rec)) {
+        if (hitScene(r, 0.001, FLT_MAX, rec)) {
             Ray scattered;
             float3 atten;
 
