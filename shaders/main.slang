@@ -61,7 +61,7 @@ StructuredBuffer<Sphere> spheres;
 static constexpr float FLT_MAX = 3.402823466e+38f;
 static constexpr int MAX_DEPTH = 10;
 static constexpr float DEFOCUS_ANGLE = 0.6;
-static constexpr float FOCUS_DIST = 10.0;
+static constexpr float FOCUS_DIST = 1.0;
 static constexpr float VFOV = 90.0;
 static constexpr int SAMPLES_PER_PIXEL = 50;
 static constexpr float PIXEL_SAMPLES_SCALE = 1.0 / SAMPLES_PER_PIXEL;
@@ -119,7 +119,7 @@ void compMain(uint3 threadId : SV_DispatchThreadID) {
     if (pixel.x >= width || pixel.y >= height)
         return;
 
-    Camera camera = {width, height, VFOV};
+    Camera camera = {width, height, VFOV, DEFOCUS_ANGLE, FOCUS_DIST};
 
     uint seed = pixel.x + pixel.y * width + width * height + 1;
     Random random = {seed};
