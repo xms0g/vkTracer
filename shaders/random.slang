@@ -31,6 +31,18 @@ public struct Random {
     }
 
     [mutating]
+    public float3 randomInUnitDisk() {
+        for(;;) {
+            float3 p = float3(random(-1, 1), random(-1, 1), 0.0);
+            float lensq = dot(p, p);
+
+            if (lensq < 1) {
+                return p;
+            }
+        }
+    }
+
+    [mutating]
     public float3 randomOnHemisphere(const float3 N) {
         float3 onUnitSphere = randomUnitVector();
 
