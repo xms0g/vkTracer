@@ -45,7 +45,7 @@ struct Sphere {
 			{
 				.centerRadius = {0.0f, -100.5f, 0.0f, 100.5f},
 				.mat = {
-					.albedo = {0.5, 0.5, 0.5, 0.0},
+					.albedo = {0.8, 0.8, 0.5, 0.0},
 					.type = MaterialType::Lambertian
 				}
 			},
@@ -55,8 +55,8 @@ struct Sphere {
 		std::mt19937 gen(rd());
 		std::uniform_real_distribution<float> dis;
 
-		for (int a = -5; a < 5; a++) {
-			for (int b = -5; b < 5; b++) {
+		for (int a = -4; a < 4; a++) {
+			for (int b = -4; b < 4; b++) {
 				const auto chooseMat = dis(gen);
 				glm::vec3 center(a + 0.9 * dis(gen), 0.2, b + 0.9 * dis(gen));
 				auto centerRad = glm::vec4(center, 0.2);

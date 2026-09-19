@@ -1,5 +1,6 @@
 #pragma once
 #define VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
+#include <list>
 #include <vulkan/vulkan_raii.hpp>
 #include "shader.hpp"
 
@@ -56,6 +57,7 @@ private:
 	vk::PipelineVertexInputStateCreateInfo mVertexInputInfo;
 	std::vector<vk::PipelineShaderStageCreateInfo> mShaderStages;
 	std::vector<vk::DynamicState> mDynamicStates;
+	std::list<std::string> mEntryPointNames;
 	const vk::raii::Device& mDevice;
 };
 

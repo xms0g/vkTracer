@@ -9,13 +9,16 @@ PipelineBuilder::PipelineBuilder(const vk::raii::Device& device)
 void PipelineBuilder::reset() {
 	mShaderStages.clear();
 	mDynamicStates.clear();
+	mEntryPointNames.clear();
 }
 
 PipelineBuilder& PipelineBuilder::addVertexShader(Shader& shader, const std::string& entry) {
+	mEntryPointNames.push_back(entry);
+
 	const vk::PipelineShaderStageCreateInfo vertShaderStageInfo{
 		.stage = vk::ShaderStageFlagBits::eVertex,
 		.module = *shader,
-		.pName = entry.c_str()
+		.pName = mEntryPointNames.back().c_str()
 	};
 
 	mShaderStages.push_back(vertShaderStageInfo);
@@ -23,10 +26,12 @@ PipelineBuilder& PipelineBuilder::addVertexShader(Shader& shader, const std::str
 }
 
 PipelineBuilder& PipelineBuilder::addFragmentShader(Shader& shader, const std::string& entry) {
+	mEntryPointNames.push_back(entry);
+
 	const vk::PipelineShaderStageCreateInfo fragShaderStageInfo{
 		.stage = vk::ShaderStageFlagBits::eFragment,
 		.module = *shader,
-		.pName = entry.c_str()
+		.pName = mEntryPointNames.back().c_str()
 	};
 
 	mShaderStages.push_back(fragShaderStageInfo);
@@ -34,10 +39,12 @@ PipelineBuilder& PipelineBuilder::addFragmentShader(Shader& shader, const std::s
 }
 
 PipelineBuilder& PipelineBuilder::addComputeShader(Shader& shader, const std::string& entry) {
+	mEntryPointNames.push_back(entry);
+
 	const vk::PipelineShaderStageCreateInfo computeShaderStageInfo{
 		.stage = vk::ShaderStageFlagBits::eCompute,
 		.module = *shader,
-		.pName = entry.c_str()
+		.pName = mEntryPointNames.back().c_str()
 	};
 
 	mShaderStages.push_back(computeShaderStageInfo);
@@ -104,22 +111,20 @@ vk::raii::PipelineLayout PipelineBuilder::createPipelineLayout(const vk::Descrip
                                                                const uint32_t dscSetLayoutCount,
                                                                const uint32_t pushConstantSize,
                                                                const vk::ShaderStageFlags stages) const {
+	vk::PushConstantRange pushConstantRange{};
 	vk::PipelineLayoutCreateInfo pipelineLayoutInfo{
 		.setLayoutCount = dscSetLayoutCount,
 		.pSetLayouts = dscSetLayout,
 	};
 
 	if (pushConstantSize > 0) {
-		const vk::PushConstantRange pushConstantRange{
-			.stageFlags = stages,
-			.offset = 0,
-			.size = pushConstantSize
-		};
+		pushConstantRange.stageFlags = stages;
+		pushConstantRange.offset = 0;
+		pushConstantRange.size = pushConstantSize;
 
 		pipelineLayoutInfo.pushConstantRangeCount = 1;
 		pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 	}
-
 
 	return {mDevice, pipelineLayoutInfo};
 }

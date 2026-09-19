@@ -8,7 +8,7 @@
 
 Engine::Engine()
 	: mWindow(std::make_unique<Window>()),
-	  mCamera(std::make_unique<Camera>(glm::vec3(0.0f, 0.0f, 0.0f))),
+	  mCamera(std::make_unique<Camera>(glm::vec3(0.0f, 1.0f, 2.0f))),
 	  mDevice(std::make_unique<Device>(*mWindow, *mCamera)),
 	  mEventBus(std::make_unique<EventBus>()) {
 	try {
