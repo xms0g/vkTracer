@@ -10,7 +10,7 @@ constexpr uint32_t WIDTH{800};
 constexpr uint32_t HEIGHT{static_cast<uint32_t>(WIDTH / ASPECT)};
 // Render
 constexpr int32_t MAX_FRAMES_IN_FLIGHT{2};
-constexpr uint32_t THREADS_PER_GROUP{8};
+constexpr uint32_t THREADS_PER_GROUP{10};
 constexpr auto SHADER_NAME = "main.spv";
 // Camera
 constexpr float CAMERA_SPEED{2.0f};

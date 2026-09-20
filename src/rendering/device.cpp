@@ -545,7 +545,7 @@ void Device::recordComputeCommandBuffer() {
 		{mComputeDescriptorSets[mFrameIndex]}, {});
 
 	const ComputePushConstants pc{
-		.resolution = glm::vec4(WIDTH, HEIGHT, 0,0),
+		.resolution = glm::vec4(WIDTH, HEIGHT, 0, 0),
 		.camCenter = glm::vec4(mCamera.center(), 0.0f),
 		.camFront = glm::vec4(mCamera.front(), 0.0f),
 		.camRight = glm::vec4(mCamera.right(), 0.0f),
@@ -559,8 +559,8 @@ void Device::recordComputeCommandBuffer() {
 		vk::ArrayProxy<const ComputePushConstants>(pc));
 
 	(*commandBuffer).dispatch(
-		(WIDTH + THREADS_PER_GROUP - 1) / THREADS_PER_GROUP,
-		(HEIGHT + THREADS_PER_GROUP - 1) / THREADS_PER_GROUP,
+		WIDTH / THREADS_PER_GROUP,
+		HEIGHT / THREADS_PER_GROUP,
 		1);
 
 	Image::transitionImageLayout(
