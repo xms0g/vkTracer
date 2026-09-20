@@ -17,6 +17,7 @@ struct Material {
 
 struct Sphere {
 	glm::vec4 centerRadius;
+	glm::vec4 center2;
 	Material mat;
 
 	static std::vector<Sphere> generateSpheres() {
@@ -54,6 +55,8 @@ struct Sphere {
 		std::random_device rd;
 		std::mt19937 gen(rd());
 		std::uniform_real_distribution<float> dis;
+		std::uniform_real_distribution<float> albedoDis(0.5, 1);
+		std::uniform_real_distribution<float> fuzzDis(0, 0.5);
 
 		for (int a = -4; a < 4; a++) {
 			for (int b = -4; b < 4; b++) {
@@ -66,18 +69,17 @@ struct Sphere {
 						// diffuse
 						const auto albedo = glm::vec4(dis(gen), dis(gen), dis(gen), 0.0f);
 						Material mat = {.albedo = albedo, .type = MaterialType::Lambertian};
-						spheres.emplace_back(centerRad, mat);
+						auto center2 = glm::vec4(center + glm::vec3(0, fuzzDis(gen), 0), 0);
+						spheres.emplace_back(centerRad, center2, mat);
 					} else if (chooseMat < 0.95) {
-						std::uniform_real_distribution<float> albedoDis(0.5, 1);
-						std::uniform_real_distribution<float> fuzzDis(0, 0.5);
 						// metal
 						const auto albedo = glm::vec4(albedoDis(gen), albedoDis(gen), albedoDis(gen), 0.0f);
 						Material mat = {.albedo = albedo, .type = MaterialType::Metal, .fuzz = fuzzDis(gen)};
-						spheres.emplace_back(centerRad, mat);
+						spheres.emplace_back(centerRad, glm::vec4(0.0), mat);
 					} else {
 						// glass
 						Material mat = {.type = MaterialType::Dielectric, .refractionIndex = 1.5f};
-						spheres.emplace_back(centerRad, mat);
+						spheres.emplace_back(centerRad, glm::vec4(0.0), mat);
 					}
 				}
 			}

@@ -46,7 +46,8 @@ public struct Camera {
 
         float3 rayOrig = defocusAngle <= 0 ? center.xyz : defocusDiskSample(center.xyz, rand);
         float3 rayDir = normalize(pixelSample - rayOrig);
-        return {rayOrig, rayDir};
+        float rayTime = rand.random();
+        return {rayOrig, rayDir, rayTime};
     }
 
     float3 defocusDiskSample(float3 center, inout Random rand) {

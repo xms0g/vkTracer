@@ -3,14 +3,32 @@ import ray;
 import hitRecord;
 import material;
 
+public struct SphereData {
+    public float4 centerRadius;
+    public float4 center2;
+    public Material mat;
+};
+
 public struct Sphere {
-    private float4 centerRadius;
+    private Ray center;
+    private float radius;
     private Material mat;
 
+    public __init(float3 center, float radius, Material mat) {
+        this.center = {center, float3(0.0)};
+        this.radius = fmax(0, radius);
+        this.mat = mat;
+    }
+
+    public __init(float3 center1, float3 center2, float radius, Material mat) {
+        this.center = {center1, center2 - center1};
+        this.radius = fmax(0, radius);
+        this.mat = mat;
+    }
+
     public bool hit(Ray ray, float tmin, float tmax, inout HitRecord rec) {
-        float3 center = centerRadius.xyz;
-        float radius = centerRadius.w;
-        float3 oc = center - ray.origin;
+        float3 currentCenter = center.at(ray.time);
+        float3 oc = currentCenter - ray.origin;
         float a = dot(ray.direction, ray.direction);
         float h = dot(ray.direction, oc);
         float c = dot(oc, oc) - radius * radius;
@@ -35,7 +53,7 @@ public struct Sphere {
         rec.point = ray.at(rec.interval);
         rec.material = mat;
 
-        float3 outwardNormal = (rec.point - center) / radius;
+        float3 outwardNormal = (rec.point - currentCenter) / radius;
         rec.setFaceNormal(ray, outwardNormal);
 
         return true;

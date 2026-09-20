@@ -56,7 +56,7 @@ PushConstants pc;
 RWTexture2D<float4> pixelsOut;
 
 [[vk::binding(1, 0)]]
-StructuredBuffer<Sphere> spheres;
+StructuredBuffer<SphereData> spheres;
 
 static constexpr float FLT_MAX = 3.402823466e+38f;
 static constexpr int MAX_DEPTH = 5;
@@ -71,7 +71,14 @@ bool hitScene(Ray ray, float tmin, float tmax, inout HitRecord rec) {
     float closestSoFar = tmax;
 
     for (uint i = 0; i < spheres.getCount(); ++i) {
-        if (spheres[i].hit(ray, tmin, closestSoFar, rec)) {
+        Sphere sphere;
+        if (all(spheres[i].center2.xyz == 0.0)) {
+            sphere = {spheres[i].centerRadius.xyz, spheres[i].centerRadius.w, spheres[i].mat};
+        } else {
+            sphere = {spheres[i].centerRadius.xyz, spheres[i].center2.xyz, spheres[i].centerRadius.w, spheres[i].mat};
+        }
+
+        if (sphere.hit(ray, tmin, closestSoFar, rec)) {
             hitAnything = true;
             closestSoFar = rec.interval;
         }
