@@ -85,7 +85,8 @@ public:
 	                 Shader& shader,
 	                 vk::SurfaceFormatKHR& surfaceFormat,
 	                 DescriptorSetLayout& dscSetLayout,
-	                 uint32_t dscSetLayoutCount);
+	                 uint32_t dscSetLayoutCount,
+	                 uint32_t pushConstantSize);
 };
 
 class ComputePipeline : public Pipeline {

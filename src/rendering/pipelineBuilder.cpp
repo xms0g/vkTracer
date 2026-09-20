@@ -174,7 +174,8 @@ GraphicsPipeline::GraphicsPipeline(PipelineBuilder& builder,
                                    Shader& shader,
                                    vk::SurfaceFormatKHR& surfaceFormat,
                                    DescriptorSetLayout& dscSetLayout,
-                                   const uint32_t dscSetLayoutCount) {
+                                   const uint32_t dscSetLayoutCount,
+                                    const uint32_t pushConstantSize) {
 	builder.reset();
 	builder.addVertexShader(shader, "vertMain")
 			.addFragmentShader(shader, "fragMain")
@@ -188,7 +189,7 @@ GraphicsPipeline::GraphicsPipeline(PipelineBuilder& builder,
 	mPipelineLayout = builder.createPipelineLayout(
 		&**dscSetLayout,
 		dscSetLayoutCount,
-		0,
+		pushConstantSize,
 		vk::ShaderStageFlagBits::eFragment);
 
 	mPipeline = builder.buildGraphics(surfaceFormat, mPipelineLayout);

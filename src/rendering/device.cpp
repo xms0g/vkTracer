@@ -303,7 +303,8 @@ void Device::createPipelines() {
 		shader,
 		mSwapchain.surfaceFormat(),
 		mGraphicsDescriptorSetLayout,
-		1);
+		1,
+		0);
 
 	mComputePipeline = ComputePipeline(
 		builder,
