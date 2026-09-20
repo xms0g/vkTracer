@@ -26,23 +26,20 @@ public struct Camera {
     }
 
     [mutating]
-    public Ray getRay(int x, int y, float4 center, float4 front, float4 right, float4 up, inout Random rand) {
-        float3 u = right.xyz;
-        float3 v = up.xyz;
-        float3 w = front.xyz;
-        float3 viewportU = u * viewportWidth;
-        float3 viewportV = -v * viewportHeight;
+    public Ray getRay(int x, int y, float3 center, float3 front, float3 right, float3 up, inout Random rand) {
+        float3 viewportU = right * viewportWidth;
+        float3 viewportV = -up * viewportHeight;
 
         float3 pixDeltaU = viewportU / width;
         float3 pixDeltaV = viewportV / height;
 
-        float3 viewportUpperLeft = center.xyz + (focusDist * w) - viewportU/2 - viewportV/2;
+        float3 viewportUpperLeft = center.xyz + (focusDist * front) - viewportU/2 - viewportV/2;
 
         float3 pixel00Loc = viewportUpperLeft + 0.5 * (pixDeltaU + pixDeltaV);
 
         float defocusRadius = focusDist * tan(radians(defocusAngle / 2));
-        defocusDiskU = u * defocusRadius;
-        defocusDiskV = v * defocusRadius;
+        defocusDiskU = right * defocusRadius;
+        defocusDiskV = up * defocusRadius;
 
         float3 offset = rand.sampleSquare();
         float3 pixelSample = pixel00Loc + (pixDeltaU * (x + offset.x)) + (pixDeltaV * (y + offset.y));

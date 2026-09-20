@@ -124,7 +124,7 @@ void compMain(uint3 threadId : SV_DispatchThreadID) {
 
     float3 pixColor = float3(0.0);
     for (int i = 0; i < SAMPLES_PER_PIXEL; ++i) {
-        Ray ray = camera.getRay(pixel.x, pixel.y, pc.camCenter, pc.camFront, pc.camRight, pc.camUp, random);
+        Ray ray = camera.getRay(pixel.x, pixel.y, pc.camCenter.xyz, pc.camFront.xyz, pc.camRight.xyz, pc.camUp.xyz, random);
         pixColor += rayColor(ray, MAX_DEPTH, random);
     }
 
