@@ -108,7 +108,7 @@ float3 rayColor(Ray ray, int depth, inout Random random) {
 }
 
 [shader("compute")]
-[numthreads(8,8,1)]
+[numthreads(10,10,1)]
 void compMain(uint3 threadId : SV_DispatchThreadID) {
     uint2 pixel = threadId.xy;
     uint width = (uint)pc.resolution.x;
