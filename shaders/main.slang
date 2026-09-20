@@ -59,11 +59,11 @@ RWTexture2D<float4> pixelsOut;
 StructuredBuffer<Sphere> spheres;
 
 static constexpr float FLT_MAX = 3.402823466e+38f;
-static constexpr int MAX_DEPTH = 10;
-static constexpr float DEFOCUS_ANGLE = 0.6;
+static constexpr int MAX_DEPTH = 5;
+static constexpr float DEFOCUS_ANGLE = 0.0;
 static constexpr float FOCUS_DIST = 1.0;
 static constexpr float VFOV = 90.0;
-static constexpr int SAMPLES_PER_PIXEL = 50;
+static constexpr int SAMPLES_PER_PIXEL = 20;
 static constexpr float PIXEL_SAMPLES_SCALE = 1.0 / SAMPLES_PER_PIXEL;
 
 bool hitScene(Ray ray, float tmin, float tmax, inout HitRecord rec) {
@@ -83,18 +83,16 @@ bool hitScene(Ray ray, float tmin, float tmax, inout HitRecord rec) {
 float3 rayColor(Ray ray, int depth, inout Random random) {
     Ray r = ray;
     float3 attenuation = float3(1.0);
-    uint width = (uint)pc.resolution.x;
-    uint height = (uint)pc.resolution.y;
 
     for (uint bounce = 0; bounce < depth; ++bounce) {
         HitRecord rec;
 
         if (hitScene(r, 0.001, FLT_MAX, rec)) {
             Ray scattered;
-            float3 atten;
+            float3 matAtten;
 
-            if (scatter(r, rec, atten, scattered, random)) {
-                attenuation *= atten;
+            if (scatter(r, rec, matAtten, scattered, random)) {
+                attenuation *= matAtten;
                 r = scattered;
             } else {
                 return float3(0.0);

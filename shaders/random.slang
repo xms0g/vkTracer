@@ -55,6 +55,6 @@ public struct Random {
 
     [mutating]
     public float3 sampleSquare() {
-        return float3(rng.nextFloat() - 0.5, rng.nextFloat() - 0.5, 0.0);
+        return float3(random() - 0.5, random() - 0.5, 0.0);
     }
 };
