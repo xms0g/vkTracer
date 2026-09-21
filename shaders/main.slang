@@ -86,7 +86,7 @@ bool hitScene(Ray ray, float tmin, float tmax, inout HitRecord rec) {
     return hitAnything;
 }
 
-float3 rayColor(Ray ray, int depth, inout Random random) {
+float3 rayColor(Ray ray, int depth, inout Random rand) {
     Ray r = ray;
     float3 attenuation = float3(1.0);
 
@@ -97,7 +97,7 @@ float3 rayColor(Ray ray, int depth, inout Random random) {
             Ray scattered;
             float3 matAtten;
 
-            if (scatter(r, rec, matAtten, scattered, random)) {
+            if (scatter(r, rec, matAtten, scattered, rand)) {
                 attenuation *= matAtten;
                 r = scattered;
             } else {
