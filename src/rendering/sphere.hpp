@@ -17,7 +17,7 @@ struct Material {
 
 struct Sphere {
 	glm::vec4 centerRadius;
-	glm::vec4 centerMovable;
+	glm::vec4 center2;
 	Material mat;
 
 	static std::vector<Sphere> generateSpheres() {
@@ -69,8 +69,8 @@ struct Sphere {
 						// diffuse
 						const auto albedo = glm::vec4(dis(gen), dis(gen), dis(gen), 0.0f);
 						Material mat = {.albedo = albedo, .type = MaterialType::Lambertian};
-						auto centerMovable = glm::vec4(center + glm::vec3(0, fuzzDis(gen), 0), true);
-						spheres.emplace_back(centerRad, centerMovable, mat);
+						auto center2 = glm::vec4(center + glm::vec3(0, fuzzDis(gen), 0), 0.0);
+						spheres.emplace_back(centerRad, center2, mat);
 					} else if (chooseMat < 0.95) {
 						// metal
 						const auto albedo = glm::vec4(albedoDis(gen), albedoDis(gen), albedoDis(gen), 0.0f);

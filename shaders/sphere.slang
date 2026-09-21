@@ -5,7 +5,7 @@ import material;
 
 public struct SphereData {
     public float4 centerRadius;
-    public float4 centerMovable;
+    public float4 center2;
     public Material mat;
 };
 
@@ -14,13 +14,9 @@ public struct Sphere {
     private float radius;
     private Material mat;
 
-    public __init(float3 center1, float3 center2, float radius, bool movable, Material mat) {
-        if (movable) {
-             this.center = {center1, center2 - center1};
-        } else {
-             this.center = {center1, float3(0.0)};
-        }
-
+    public __init(float3 center1, float3 center2, float radius, Material mat) {
+        float3 activeMask = float3(any(center2 != 0.0));
+        this.center = Ray(center1, (center2 - center1) * activeMask);
         this.radius = fmax(0, radius);
         this.mat = mat;
     }
