@@ -71,12 +71,12 @@ bool hitScene(Ray ray, float tmin, float tmax, inout HitRecord rec) {
     float closestSoFar = tmax;
 
     for (uint i = 0; i < sphereDatas.getCount(); ++i) {
-        Sphere sphere;
-        if (all(sphereDatas[i].center2.xyz == 0.0)) {
-            sphere = {sphereDatas[i].centerRadius.xyz, sphereDatas[i].centerRadius.w, sphereDatas[i].mat};
-        } else {
-            sphere = {sphereDatas[i].centerRadius.xyz, sphereDatas[i].center2.xyz, sphereDatas[i].centerRadius.w, sphereDatas[i].mat};
-        }
+        Sphere sphere = {
+            sphereDatas[i].centerRadius.xyz,
+            sphereDatas[i].centerMovable.xyz,
+            sphereDatas[i].centerRadius.w,
+            sphereDatas[i].centerMovable.w,
+            sphereDatas[i].mat};
 
         if (sphere.hit(ray, tmin, closestSoFar, rec)) {
             hitAnything = true;
