@@ -7,5 +7,11 @@ Ray generation, intersection tests, material scattering, and pixel sampling are 
 ![Graphics](https://img.shields.io/badge/API-Vulkan-ac162c)
 ![License](https://img.shields.io/badge/License-BSD%203--Clause-green)
 ![Screenshot](assets/demo.gif)
+## Features
+- Sphere intersection (reflection/refraction)
+- Lambertian,metallic and dielectric materials
+- Anti-aliasing
+- Gamma correction
+- Interactive camera
 ## License
 This project is licensed under the BSD 3-Clause License. See the LICENSE file for details.
