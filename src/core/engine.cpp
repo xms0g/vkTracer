@@ -2,8 +2,8 @@
 #include "window.hpp"
 #include "camera.hpp"
 #include "input.hpp"
+#include "../rendering/core/device.hpp"
 #include "../config/config.hpp"
-#include "../rendering/device.hpp"
 #include "../event/eventBus.hpp"
 
 Engine::Engine()

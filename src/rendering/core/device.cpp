@@ -7,8 +7,8 @@
 #include <chrono>
 #include <random>
 #include <unordered_set>
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <SDL_vulkan.h>
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include "buffer.hpp"
 #include "swapchain.hpp"
@@ -18,11 +18,11 @@
 #include "deviceExtension.hpp"
 #include "image.hpp"
 #include "pipelineBuilder.hpp"
-#include "sphere.hpp"
 #include "validation.hpp"
-#include "../core/window.hpp"
-#include "../config/config.hpp"
-#include "../core/camera.hpp"
+#include "../sphere.hpp"
+#include "../../core/window.hpp"
+#include "../../config/config.hpp"
+#include "../../core/camera.hpp"
 
 Device::Device(Window& window, Camera& camera)
 	: mWindow(window),
