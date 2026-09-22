@@ -41,6 +41,8 @@ import random;
 import color;
 import material;
 import interval;
+import aabb;
+import scene;
 
 struct PushConstants {
     float4 resolution;
@@ -67,34 +69,14 @@ static constexpr float VFOV = 90.0;
 static constexpr int SAMPLES_PER_PIXEL = 20;
 static constexpr float PIXEL_SAMPLES_SCALE = 1.0 / SAMPLES_PER_PIXEL;
 
-bool hitScene(Ray ray, interval t, inout HitRecord rec) {
-    bool hitAnything = false;
-    float closestSoFar = t.max;
-
-    for (uint i = 0; i < sphereDatas.getCount(); ++i) {
-        Sphere sphere = {
-            sphereDatas[i].centerRadius.xyz,
-            sphereDatas[i].center2.xyz,
-            sphereDatas[i].centerRadius.w,
-            sphereDatas[i].mat};
-
-        if (sphere.hit(ray, {t.min, closestSoFar}, rec)) {
-            hitAnything = true;
-            closestSoFar = rec.interval;
-        }
-    }
-
-    return hitAnything;
-}
-
-float3 rayColor(Ray ray, int depth, inout Random rand) {
+float3 rayColor(Ray ray, int depth, Scene scene, inout Random rand) {
     Ray r = ray;
     float3 attenuation = float3(1.0);
 
     for (uint bounce = 0; bounce < depth; ++bounce) {
         HitRecord rec;
 
-        if (hitScene(r, {0.001, FLT_MAX}, rec)) {
+        if (scene.hit(r, interval(0.001, FLT_MAX), rec)) {
             Ray scattered;
             float3 matAtten;
 
@@ -125,6 +107,7 @@ void compMain(uint3 threadId : SV_DispatchThreadID) {
         return;
 
     Camera camera = {width, height, VFOV, DEFOCUS_ANGLE, FOCUS_DIST};
+    Scene scene = {sphereDatas};
 
     uint seed = pixel.x + pixel.y * width + width * height + 1;
     Random random = {seed};
@@ -132,7 +115,7 @@ void compMain(uint3 threadId : SV_DispatchThreadID) {
     float3 pixColor = float3(0.0);
     for (int i = 0; i < SAMPLES_PER_PIXEL; ++i) {
         Ray ray = camera.getRay(pixel.x, pixel.y, pc.camCenter.xyz, pc.camFront.xyz, pc.camRight.xyz, pc.camUp.xyz, random);
-        pixColor += rayColor(ray, MAX_DEPTH, random);
+        pixColor += rayColor(ray, MAX_DEPTH, scene, random);
     }
 
     float3 color = pixColor * PIXEL_SAMPLES_SCALE;
