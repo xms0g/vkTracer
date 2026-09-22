@@ -2,6 +2,7 @@ module sphere;
 import ray;
 import hitRecord;
 import material;
+import interval;
 
 public struct SphereData {
     public float4 centerRadius;
@@ -21,7 +22,7 @@ public struct Sphere {
         this.mat = mat;
     }
 
-    public bool hit(Ray ray, float tmin, float tmax, inout HitRecord rec) {
+    public bool hit(Ray ray, interval t, inout HitRecord rec) {
         float3 currentCenter = center.at(ray.time);
         float3 oc = currentCenter - ray.origin;
         float a = dot(ray.direction, ray.direction);
@@ -37,10 +38,10 @@ public struct Sphere {
 
         // Find the nearest root that lies in the acceptable range.
         float root = (h - sqrtd) / a;
-        if (root <= tmin || tmax <= root) {
+        if (root <= t.min || t.max <= root) {
             root = (h + sqrtd) / a;
 
-            if (root <= tmin || tmax <= root)
+            if (root <= t.min || t.max <= root)
                 return false;
         }
 

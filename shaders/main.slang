@@ -40,6 +40,7 @@ import camera;
 import random;
 import color;
 import material;
+import interval;
 
 struct PushConstants {
     float4 resolution;
@@ -66,9 +67,9 @@ static constexpr float VFOV = 90.0;
 static constexpr int SAMPLES_PER_PIXEL = 20;
 static constexpr float PIXEL_SAMPLES_SCALE = 1.0 / SAMPLES_PER_PIXEL;
 
-bool hitScene(Ray ray, float tmin, float tmax, inout HitRecord rec) {
+bool hitScene(Ray ray, interval t, inout HitRecord rec) {
     bool hitAnything = false;
-    float closestSoFar = tmax;
+    float closestSoFar = t.max;
 
     for (uint i = 0; i < sphereDatas.getCount(); ++i) {
         Sphere sphere = {
@@ -77,7 +78,7 @@ bool hitScene(Ray ray, float tmin, float tmax, inout HitRecord rec) {
             sphereDatas[i].centerRadius.w,
             sphereDatas[i].mat};
 
-        if (sphere.hit(ray, tmin, closestSoFar, rec)) {
+        if (sphere.hit(ray, {t.min, closestSoFar}, rec)) {
             hitAnything = true;
             closestSoFar = rec.interval;
         }
@@ -93,7 +94,7 @@ float3 rayColor(Ray ray, int depth, inout Random rand) {
     for (uint bounce = 0; bounce < depth; ++bounce) {
         HitRecord rec;
 
-        if (hitScene(r, 0.001, FLT_MAX, rec)) {
+        if (hitScene(r, {0.001, FLT_MAX}, rec)) {
             Ray scattered;
             float3 matAtten;
 
