@@ -3,19 +3,12 @@ import ray;
 import hitRecord;
 import sphere;
 import interval;
-import aabb;
 
 public struct Scene {
-    AABB bounds;
     StructuredBuffer<SphereData> spheres;
 
     public __init(StructuredBuffer<SphereData> buffer) {
         spheres = buffer;
-        
-        for (uint i = 0; i < spheres.getCount(); ++i) {
-            Sphere sphere = getSphere(i);
-            bounds = AABB(bounds, sphere.boundingBox());
-        }
     }
 
     public bool hit(Ray ray, interval t, inout HitRecord rec) {
@@ -34,7 +27,7 @@ public struct Scene {
         return hitAnything;
     }
 
-    Sphere getSphere(uint index) {
+    public Sphere getSphere(uint index) {
         SphereData data = spheres[index];
 
         return {data.centerRadius.xyz,

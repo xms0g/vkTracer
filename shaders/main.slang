@@ -41,7 +41,6 @@ import random;
 import color;
 import material;
 import interval;
-import aabb;
 import scene;
 
 struct PushConstants {
