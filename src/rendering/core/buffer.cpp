@@ -5,7 +5,7 @@ Buffer::Buffer(const vk::DeviceSize size,
                const vk::raii::PhysicalDevice& phyDev,
                const vk::BufferUsageFlags usage,
                const vk::MemoryPropertyFlags properties,
-               const vk::MemoryAllocateFlagsInfo& allocFlags)
+               const vk::MemoryAllocateFlagsInfo& allocFlagsInfo)
 	: mSize(size) {
 	const vk::BufferCreateInfo bufferInfo{
 		.size = size, .usage = usage, .sharingMode = vk::SharingMode::eExclusive
@@ -15,7 +15,7 @@ Buffer::Buffer(const vk::DeviceSize size,
 
 	const vk::MemoryRequirements memRequirements = mBuffer.getMemoryRequirements();
 
-	mBufferMemory = DeviceMemory{device, phyDev, size, memRequirements.memoryTypeBits, properties, allocFlags};
+	mBufferMemory = DeviceMemory{device, phyDev, size, memRequirements.memoryTypeBits, properties, allocFlagsInfo};
 	mBuffer.bindMemory(**mBufferMemory, 0);
 }
 

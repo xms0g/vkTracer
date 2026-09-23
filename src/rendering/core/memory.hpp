@@ -12,7 +12,7 @@ public:
 	                      vk::DeviceSize size,
 	                      uint32_t typeFilter,
 	                      vk::MemoryPropertyFlags properties,
-	                      const vk::MemoryAllocateFlagsInfo& allocFlags = {});
+	                      const vk::MemoryAllocateFlagsInfo& allocFlagsInfo = {});
 
 	DeviceMemory(const DeviceMemory& other) = delete;
 

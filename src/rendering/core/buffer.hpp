@@ -10,7 +10,7 @@ public:
 	       const vk::raii::PhysicalDevice& phyDev,
 	       vk::BufferUsageFlags usage,
 	       vk::MemoryPropertyFlags properties,
-	       const vk::MemoryAllocateFlagsInfo& allocFlags = {});
+	       const vk::MemoryAllocateFlagsInfo& allocFlagsInfo = {});
 
 	[[nodiscard]]
 	vk::DeviceSize size() const;
