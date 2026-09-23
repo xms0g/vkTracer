@@ -44,7 +44,7 @@ import scene;
 
 struct PushConstants {
     uint64_t bufferAddress;
-    uint64_t bufferSize;
+    uint64_t count;
     float4 resolution;
     float4 camCenter;
     float4 camFront;
@@ -104,7 +104,7 @@ void compMain(uint3 threadId : SV_DispatchThreadID) {
         return;
 
     Camera camera = {width, height, VFOV, DEFOCUS_ANGLE, FOCUS_DIST};
-    Scene scene = {pc.bufferAddress, pc.bufferSize};
+    Scene scene = {pc.bufferAddress, pc.count};
 
     uint seed = pixel.x + pixel.y * width + width * height + 1;
     Random random = {seed};
