@@ -40,7 +40,6 @@ import camera;
 import random;
 import color;
 import material;
-import interval;
 import scene;
 
 struct PushConstants {
@@ -75,7 +74,7 @@ float3 rayColor(Ray ray, int depth, Scene scene, inout Random rand) {
     for (uint bounce = 0; bounce < depth; ++bounce) {
         HitRecord rec;
 
-        if (scene.hit(r, interval(0.001, FLT_MAX), rec)) {
+        if (scene.hit(r, float2(0.001, FLT_MAX), rec)) {
             Ray scattered;
             float3 matAtten;
 

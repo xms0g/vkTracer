@@ -2,7 +2,6 @@ module scene;
 import ray;
 import hitRecord;
 import sphere;
-import interval;
 
 public struct Scene {
     StructuredBuffer<SphereData> spheres;
@@ -11,14 +10,14 @@ public struct Scene {
         spheres = buffer;
     }
 
-    public bool hit(Ray ray, interval t, inout HitRecord rec) {
+    public bool hit(Ray ray, float2 t, inout HitRecord rec) {
         bool hitAnything = false;
-        float closestSoFar = t.max;
+        float closestSoFar = t.y;
 
         for (uint i = 0; i < spheres.getCount(); ++i) {
             Sphere sphere = getSphere(i);
             
-            if (sphere.hit(ray, interval(t.min, closestSoFar), rec)) {
+            if (sphere.hit(ray, float2(t.x, closestSoFar), rec)) {
                 hitAnything = true;
                 closestSoFar = rec.interval;
             }

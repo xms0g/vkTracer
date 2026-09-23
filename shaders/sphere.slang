@@ -22,7 +22,7 @@ public struct Sphere {
         this.mat = mat;
     }
 
-    public bool hit(Ray ray, interval t, inout HitRecord rec) {
+    public bool hit(Ray ray, float2 t, inout HitRecord rec) {
         float3 currentCenter = center.at(ray.time);
         float3 oc = currentCenter - ray.origin;
         float a = dot(ray.direction, ray.direction);
@@ -38,10 +38,10 @@ public struct Sphere {
 
         // Find the nearest root that lies in the acceptable range.
         float root = (h - sqrtd) / a;
-        if (root <= t.min || t.max <= root) {
+        if (root <= t.x || t.y <= root) {
             root = (h + sqrtd) / a;
 
-            if (root <= t.min || t.max <= root)
+            if (root <= t.x || t.y <= root)
                 return false;
         }
 
