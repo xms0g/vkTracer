@@ -1,6 +1,7 @@
 #pragma once
 #define VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
 #include <vulkan/vulkan_raii.hpp>
+#include "memory.hpp"
 
 class Buffer {
 public:
@@ -8,7 +9,8 @@ public:
 	       const vk::raii::Device& device,
 	       const vk::raii::PhysicalDevice& phyDev,
 	       vk::BufferUsageFlags usage,
-	       vk::MemoryPropertyFlags properties);
+	       vk::MemoryPropertyFlags properties,
+	       const vk::MemoryAllocateFlagsInfo& allocFlags = {});
 
 	[[nodiscard]]
 	vk::DeviceSize size() const;
@@ -31,6 +33,6 @@ private:
 
 	vk::DeviceSize mSize;
 	vk::raii::Buffer mBuffer{nullptr};
-	vk::raii::DeviceMemory mBufferMemory{nullptr};
+	DeviceMemory mBufferMemory{};
 	void* mMappedMemory{nullptr};
 };

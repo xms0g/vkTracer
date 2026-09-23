@@ -26,7 +26,7 @@ Image::Image(const vk::raii::Device& device,
 	mImageMemory = DeviceMemory(device, phyDev, memRequirements.size, memRequirements.memoryTypeBits,
 	                            config.properties);
 
-	mImage.bindMemory(*mImageMemory, 0);
+	mImage.bindMemory(**mImageMemory, 0);
 
 	const vk::ImageViewCreateInfo viewInfo{
 		.image = mImage,

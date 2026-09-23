@@ -43,6 +43,8 @@ import material;
 import scene;
 
 struct PushConstants {
+    uint64_t bufferAddress;
+    uint64_t bufferSize;
     float4 resolution;
     float4 camCenter;
     float4 camFront;
@@ -55,9 +57,6 @@ PushConstants pc;
 
 [[vk::binding(0, 0)]]
 RWTexture2D<float4> pixelsOut;
-
-[[vk::binding(1, 0)]]
-StructuredBuffer<SphereData> sphereDatas;
 
 static constexpr float FLT_MAX = 3.402823466e+38f;
 static constexpr int MAX_DEPTH = 5;
@@ -105,7 +104,7 @@ void compMain(uint3 threadId : SV_DispatchThreadID) {
         return;
 
     Camera camera = {width, height, VFOV, DEFOCUS_ANGLE, FOCUS_DIST};
-    Scene scene = {sphereDatas};
+    Scene scene = {pc.bufferAddress, pc.bufferSize};
 
     uint seed = pixel.x + pixel.y * width + width * height + 1;
     Random random = {seed};

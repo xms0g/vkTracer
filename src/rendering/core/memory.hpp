@@ -11,7 +11,8 @@ public:
 	                      const vk::raii::PhysicalDevice& phyDev,
 	                      vk::DeviceSize size,
 	                      uint32_t typeFilter,
-	                      vk::MemoryPropertyFlags properties);
+	                      vk::MemoryPropertyFlags properties,
+	                      const vk::MemoryAllocateFlagsInfo& allocFlags = {});
 
 	DeviceMemory(const DeviceMemory& other) = delete;
 

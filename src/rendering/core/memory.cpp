@@ -4,8 +4,11 @@ DeviceMemory::DeviceMemory(const vk::raii::Device& device,
                            const vk::raii::PhysicalDevice& phyDev,
                            const vk::DeviceSize size,
                            const uint32_t typeFilter,
-                           const vk::MemoryPropertyFlags properties) {
+                           const vk::MemoryPropertyFlags properties,
+                           const vk::MemoryAllocateFlagsInfo& allocFlags) {
+
 	const vk::MemoryAllocateInfo allocInfo{
+		.pNext = &allocFlags,
 		.allocationSize = size,
 		.memoryTypeIndex = findMemoryType(typeFilter, properties, phyDev)
 	};

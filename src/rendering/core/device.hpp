@@ -92,6 +92,8 @@ private:
 	static bool checkDeviceSuitable(const vk::raii::PhysicalDevice& phyDevice);
 
 	struct ComputePushConstants {
+		uint64_t bufferAddress;
+		uint64_t count;
 		alignas(16) glm::vec4 resolution;
 		alignas(16) glm::vec4 camCenter;
 		alignas(16) glm::vec4 camFront;
@@ -125,6 +127,7 @@ private:
 	ComputePipeline mComputePipeline{};
 	std::vector<Image> mShaderStorageImages;
 	std::vector<Buffer> mShaderStorageBuffers;
+	std::vector<uint64_t> mShaderStorageBufferAddresses;
 	vk::raii::Sampler mSampler{nullptr};
 	CommandPool mCommandPool;
 	std::vector<CommandBuffer> mGraphicsCommandBuffers;

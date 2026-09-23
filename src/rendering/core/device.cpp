@@ -236,14 +236,14 @@ void Device::createLogicalDevice() {
 	const vk::StructureChain<
 		vk::PhysicalDeviceFeatures2,
 		vk::PhysicalDeviceVulkan11Features,
+		vk::PhysicalDeviceVulkan12Features,
 		vk::PhysicalDeviceVulkan13Features,
-		vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT,
-		vk::PhysicalDeviceTimelineSemaphoreFeaturesKHR> featureChain = {
-		{.features = {.samplerAnisotropy = true}},
+		vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT> featureChain = {
+		{.features = {.samplerAnisotropy = true, .shaderInt64 = true},},
 		{.shaderDrawParameters = true},
+		{.timelineSemaphore = true, .bufferDeviceAddress = true},
 		{.synchronization2 = true, .dynamicRendering = true},
-		{.extendedDynamicState = true},
-		{.timelineSemaphore = true}
+		{.extendedDynamicState = true}
 	};
 
 	float queuePriority = 0.5f;
@@ -275,11 +275,6 @@ void Device::createDescriptorSetLayout() {
 			.addBinding(
 				0,
 				vk::DescriptorType::eStorageImage,
-				1,
-				vk::ShaderStageFlagBits::eCompute)
-			.addBinding(
-				1,
-				vk::DescriptorType::eStorageBuffer,
 				1,
 				vk::ShaderStageFlagBits::eCompute)
 			.build();
@@ -353,17 +348,22 @@ void Device::createShaderStorageBuffers() {
 
 	// Copy initial sphere data to all storage buffers
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
-		Buffer ssbo{
+		mShaderStorageBuffers.emplace_back(
 			bufferSize,
 			mDevice,
 			mPhysicalDevice,
-			vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst,
-			vk::MemoryPropertyFlagBits::eDeviceLocal
-		};
+			vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst |
+			vk::BufferUsageFlagBits::eShaderDeviceAddress,
+			vk::MemoryPropertyFlagBits::eDeviceLocal,
+			vk::MemoryAllocateFlagsInfo{.flags = vk::MemoryAllocateFlagBits::eDeviceAddress});
 
+		auto& ssbo = mShaderStorageBuffers.back();
 		copyBuffer(stagingBuffer, ssbo, bufferSize);
 
-		mShaderStorageBuffers.emplace_back(std::move(ssbo));
+		vk::BufferDeviceAddressInfo info{
+			.buffer = **ssbo
+		};
+		mShaderStorageBufferAddresses.emplace_back(mDevice.getBufferAddress(info));
 	}
 }
 
@@ -422,22 +422,13 @@ void Device::createDescriptorSets() {
 					vk::DescriptorType::eStorageImage,
 					mShaderStorageImages[i].view(),
 					vk::ImageLayout::eGeneral)
-				.writeBuffer(
-					*mComputeDescriptorSets[i],
-					1,
-					vk::DescriptorType::eStorageBuffer,
-					**mShaderStorageBuffers[i],
-					0,
-					mShaderStorageBuffers[i].size()
-				);
-
-		writer.writeImage(
-			*mGraphicsDescriptorSets[i],
-			2,
-			vk::DescriptorType::eCombinedImageSampler,
-			mShaderStorageImages[i].view(),
-			vk::ImageLayout::eShaderReadOnlyOptimal,
-			mSampler);
+				.writeImage(
+					*mGraphicsDescriptorSets[i],
+					2,
+					vk::DescriptorType::eCombinedImageSampler,
+					mShaderStorageImages[i].view(),
+					vk::ImageLayout::eShaderReadOnlyOptimal,
+					mSampler);
 
 		writer.update();
 	}
@@ -546,6 +537,8 @@ void Device::recordComputeCommandBuffer() {
 		{mComputeDescriptorSets[mFrameIndex]}, {});
 
 	const ComputePushConstants pc{
+		.bufferAddress = mShaderStorageBufferAddresses[mFrameIndex],
+		.count = mShaderStorageBuffers[mFrameIndex].size() / sizeof(Sphere),
 		.resolution = glm::vec4(WIDTH, HEIGHT, 0, 0),
 		.camCenter = glm::vec4(mCamera.center(), 0.0f),
 		.camFront = glm::vec4(mCamera.front(), 0.0f),
@@ -675,19 +668,21 @@ bool Device::checkDeviceSuitable(const vk::raii::PhysicalDevice& phyDevice) {
 	auto features2 = phyDevice.getFeatures2<
 		vk::PhysicalDeviceFeatures2,
 		vk::PhysicalDeviceVulkan11Features,
+		vk::PhysicalDeviceVulkan12Features,
 		vk::PhysicalDeviceVulkan13Features,
 		vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>();
 
 	// Perform the checks with clear boolean logic
 	bool supportsSamplerAnisotropy = features2.get<vk::PhysicalDeviceFeatures2>().features.samplerAnisotropy;
 	bool supportsShaderDrawParameters = features2.get<vk::PhysicalDeviceVulkan11Features>().shaderDrawParameters;
+	bool supportBufferDeviceAddress = features2.get<vk::PhysicalDeviceVulkan12Features>().bufferDeviceAddress;
 	bool supportsDynamicRendering = features2.get<vk::PhysicalDeviceVulkan13Features>().dynamicRendering;
 	bool supportsSynchronization2 = features2.get<vk::PhysicalDeviceVulkan13Features>().synchronization2;
-	bool supportsExtendedDynamicState = features2.get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>().
-			extendedDynamicState;
+	bool supportsExtendedDynamicState = features2.get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>().extendedDynamicState;
 	bool supportsRequiredFeatures =
 			supportsSamplerAnisotropy &&
 			supportsShaderDrawParameters &&
+			supportBufferDeviceAddress &&
 			supportsDynamicRendering &&
 			supportsSynchronization2 &&
 			supportsExtendedDynamicState;
