@@ -29,12 +29,11 @@ public struct Scene {
     }
 
     Sphere getSphere(uint index) {
-        SphereData* datas = (SphereData*)bufferAddress;
-        SphereData data = datas[index];
+        SphereData* data = (SphereData*)bufferAddress + index;
 
-        return {data.centerRadius.xyz,
-                data.center2.xyz,
-                data.centerRadius.w,
-                data.mat};
+        return {data->centerRadius.xyz,
+                data->center2.xyz,
+                data->centerRadius.w,
+                data->mat};
     }
 };
