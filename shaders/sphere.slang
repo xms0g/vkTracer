@@ -2,7 +2,6 @@ module sphere;
 import ray;
 import hitRecord;
 import material;
-import interval;
 
 public struct SphereData {
     public float4 centerRadius;

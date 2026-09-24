@@ -28,7 +28,7 @@ public struct Scene {
         return hitAnything;
     }
 
-    public Sphere getSphere(uint index) {
+    Sphere getSphere(uint index) {
         SphereData* datas = (SphereData*)bufferAddress;
         SphereData data = datas[index];
 
