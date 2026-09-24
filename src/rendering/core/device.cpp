@@ -282,7 +282,7 @@ void Device::createDescriptorSetLayout() {
 	mGraphicsDescriptorSetLayout = DescriptorSetLayout(mDevice);
 	mGraphicsDescriptorSetLayout
 			.addBinding(
-				2,
+				1,
 				vk::DescriptorType::eCombinedImageSampler,
 				1,
 				vk::ShaderStageFlagBits::eFragment)
@@ -319,10 +319,9 @@ void Device::createCommandPool() {
 void Device::createDescriptorPool() {
 	mDescriptorPool = DescriptorPool(mDevice);
 	mDescriptorPool
-			.addMaxSets(MAX_FRAMES_IN_FLIGHT * 3)
+			.addMaxSets(MAX_FRAMES_IN_FLIGHT * 2)
 			.addPoolFlags(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet)
 			.addPoolSize(vk::DescriptorType::eStorageImage, MAX_FRAMES_IN_FLIGHT)
-			.addPoolSize(vk::DescriptorType::eStorageBuffer, MAX_FRAMES_IN_FLIGHT)
 			.addPoolSize(vk::DescriptorType::eCombinedImageSampler, MAX_FRAMES_IN_FLIGHT)
 			.build();
 }
@@ -413,7 +412,7 @@ void Device::createDescriptorSets() {
 	mGraphicsDescriptorSets = allocator.allocate(MAX_FRAMES_IN_FLIGHT, **mGraphicsDescriptorSetLayout);
 
 	DescriptorSetWriter writer(mDevice);
-	writer.reserve(MAX_FRAMES_IN_FLIGHT * 3);
+	writer.reserve(MAX_FRAMES_IN_FLIGHT * 2);
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
 		writer.writeImage(
@@ -424,7 +423,7 @@ void Device::createDescriptorSets() {
 					vk::ImageLayout::eGeneral)
 				.writeImage(
 					*mGraphicsDescriptorSets[i],
-					2,
+					1,
 					vk::DescriptorType::eCombinedImageSampler,
 					mShaderStorageImages[i].view(),
 					vk::ImageLayout::eShaderReadOnlyOptimal,

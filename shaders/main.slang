@@ -25,7 +25,7 @@ VSOutput vertMain(uint vertexId : SV_VertexID) {
     return output;
 }
 
-[[vk::binding(2, 0)]]
+[[vk::binding(1, 0)]]
 Sampler2D pixels;
 
 [shader("fragment")]
