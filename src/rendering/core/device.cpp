@@ -19,6 +19,7 @@
 #include "image.hpp"
 #include "pipelineBuilder.hpp"
 #include "validation.hpp"
+#include "../bvh.hpp"
 #include "../sphere.hpp"
 #include "../../core/window.hpp"
 #include "../../config/config.hpp"
@@ -327,42 +328,79 @@ void Device::createDescriptorPool() {
 }
 
 void Device::createShaderStorageBuffers() {
-	const auto spheres = Sphere::generateSpheres();
-	const vk::DeviceSize bufferSize = sizeof(Sphere) * spheres.size();
+	std::vector<GPUSphere> gpuSpheres;
+	auto spheres = Sphere::generateSpheres();
+	const auto bvh = BVHNode(spheres, 0, spheres.size());
+
+	vk::DeviceSize bvhBufferSize = sizeof(GPUBVHNode) * BVHNode::count;
+	vk::DeviceSize sphereBufferSize = sizeof(GPUSphere) * spheres.size();
 
 	// Create a staging buffer used to upload data to the gpu
-	Buffer stagingBuffer{
-		bufferSize,
+	Buffer sphereStagingBuffer{
+		sphereBufferSize,
+		mDevice,
+		mPhysicalDevice,
+		vk::BufferUsageFlagBits::eTransferSrc,
+		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
+	};
+	Buffer bvhStagingBuffer{
+		bvhBufferSize,
 		mDevice,
 		mPhysicalDevice,
 		vk::BufferUsageFlagBits::eTransferSrc,
 		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
 	};
 
-	void* mem = stagingBuffer.map(bufferSize);
-	memcpy(mem, spheres.data(), bufferSize);
-	stagingBuffer.unmap();
-
 	mShaderStorageBuffers.clear();
 
 	// Copy initial sphere data to all storage buffers
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
-		mShaderStorageBuffers.emplace_back(
-			bufferSize,
+		gpuSpheres.clear();
+
+		Buffer spheresSSBO{
+			sphereBufferSize,
 			mDevice,
 			mPhysicalDevice,
 			vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst |
 			vk::BufferUsageFlagBits::eShaderDeviceAddress,
 			vk::MemoryPropertyFlagBits::eDeviceLocal,
-			vk::MemoryAllocateFlagsInfo{.flags = vk::MemoryAllocateFlagBits::eDeviceAddress});
+			vk::MemoryAllocateFlagsInfo{.flags = vk::MemoryAllocateFlagBits::eDeviceAddress}};
 
-		auto& ssbo = mShaderStorageBuffers.back();
-		copyBuffer(stagingBuffer, ssbo, bufferSize);
+		Buffer bvhSSBO{
+			bvhBufferSize,
+			mDevice,
+			mPhysicalDevice,
+			vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst |
+			vk::BufferUsageFlagBits::eShaderDeviceAddress,
+			vk::MemoryPropertyFlagBits::eDeviceLocal,
+			vk::MemoryAllocateFlagsInfo{.flags = vk::MemoryAllocateFlagBits::eDeviceAddress}};
 
 		vk::BufferDeviceAddressInfo info{
-			.buffer = **ssbo
+			.buffer = **spheresSSBO
 		};
-		mShaderStorageBufferAddresses.emplace_back(mDevice.getBufferAddress(info));
+		uint64_t sphereAddress = mDevice.getBufferAddress(info);
+
+		info.buffer = **bvhSSBO;
+		uint64_t bvhAddress = mDevice.getBufferAddress(info);
+
+		const auto gpuBVH = BVHNode::flatten(bvh, gpuSpheres, bvhAddress, sphereAddress);
+
+		void* mem = sphereStagingBuffer.map(sphereBufferSize);
+		memcpy(mem, gpuSpheres.data(), sphereBufferSize);
+		sphereStagingBuffer.unmap();
+
+		copyBuffer(sphereStagingBuffer, spheresSSBO, sphereBufferSize);
+
+		mem = bvhStagingBuffer.map(bvhBufferSize);
+		memcpy(mem, gpuBVH.data(), bvhBufferSize);
+		bvhStagingBuffer.unmap();
+
+		copyBuffer(bvhStagingBuffer, bvhSSBO, bvhBufferSize);
+
+		mShaderStorageBuffers.emplace_back(std::move(spheresSSBO));
+		mShaderStorageBuffers.emplace_back(std::move(bvhSSBO));
+
+		mShaderStorageBufferAddresses.push_back(bvhAddress);
 	}
 }
 
@@ -537,7 +575,6 @@ void Device::recordComputeCommandBuffer() {
 
 	const ComputePushConstants pc{
 		.bufferAddress = mShaderStorageBufferAddresses[mFrameIndex],
-		.count = mShaderStorageBuffers[mFrameIndex].size() / sizeof(Sphere),
 		.resolution = glm::vec4(WIDTH, HEIGHT, 0, 0),
 		.camCenter = glm::vec4(mCamera.center(), 0.0f),
 		.camFront = glm::vec4(mCamera.front(), 0.0f),

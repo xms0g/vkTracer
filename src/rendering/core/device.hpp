@@ -93,7 +93,6 @@ private:
 
 	struct ComputePushConstants {
 		uint64_t bufferAddress;
-		uint64_t count;
 		alignas(16) glm::vec4 resolution;
 		alignas(16) glm::vec4 camCenter;
 		alignas(16) glm::vec4 camFront;
