@@ -1,16 +1,9 @@
 #pragma once
 #include <glm/glm.hpp>
-#include "sphere.hpp"
+#include "aabb.hpp"
+#include "hittable.hpp"
 
-enum HittableType : uint32_t {
-	SphereType,
-	BVHType
-};
-
-struct HittableRef {
-	uint64_t address;
-	HittableType type;
-};
+struct GPUSphere;
 
 struct GPUBVHNode {
 	AABB bounds;
@@ -26,7 +19,7 @@ struct BVHNode : Hittable {
 
 	BVHNode() = default;
 
-	BVHNode(std::vector<std::shared_ptr<Hittable> >& spheres, size_t start, size_t end);
+	BVHNode(std::vector<std::shared_ptr<Hittable> >& objects, size_t start, size_t end);
 
 	[[nodiscard]]
 	AABB boundingBox() const override;

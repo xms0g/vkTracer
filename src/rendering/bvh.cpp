@@ -2,24 +2,25 @@
 #include <algorithm>
 #include <cstdint>
 #include <random>
+#include "sphere.hpp"
 
 size_t BVHNode::count = 0;
 
-BVHNode::BVHNode(std::vector<std::shared_ptr<Hittable> >& spheres, const size_t start, const size_t end) {
+BVHNode::BVHNode(std::vector<std::shared_ptr<Hittable> >& objects, const size_t start, const size_t end) {
 	++count;
 
-	for (size_t object_index = start; object_index < end; object_index++)
-		bounds = AABB(bounds, spheres[object_index]->boundingBox());
+	for (size_t objectIndex = start; objectIndex < end; objectIndex++)
+		bounds = AABB(bounds, objects[objectIndex]->boundingBox());
 
 	const int axis = bounds.longestAxis();
 
 	if (const size_t object_span = end - start; object_span == 1) {
-		left = right = spheres[start];
+		left = right = objects[start];
 	} else if (object_span == 2) {
-		left = spheres[start];
-		right = spheres[start + 1];
+		left = objects[start];
+		right = objects[start + 1];
 	} else {
-		std::sort(std::begin(spheres) + start, std::begin(spheres) + end,
+		std::sort(std::begin(objects) + start, std::begin(objects) + end,
 		          [&](const std::shared_ptr<Hittable>& a, const std::shared_ptr<Hittable>& b) {
 			          const auto a_axis_interval = a->boundingBox().axis(axis);
 			          const auto b_axis_interval = b->boundingBox().axis(axis);
@@ -27,11 +28,9 @@ BVHNode::BVHNode(std::vector<std::shared_ptr<Hittable> >& spheres, const size_t 
 		          });
 
 		const auto mid = start + object_span / 2;
-		left = std::make_shared<BVHNode>(spheres, start, mid);
-		right = std::make_shared<BVHNode>(spheres, mid, end);
+		left = std::make_shared<BVHNode>(objects, start, mid);
+		right = std::make_shared<BVHNode>(objects, mid, end);
 	}
-
-	bounds = AABB(left->boundingBox(), right->boundingBox());
 }
 
 AABB BVHNode::boundingBox() const {
