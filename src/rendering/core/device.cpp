@@ -379,7 +379,6 @@ void Device::createShaderStorageBuffers() {
 			.buffer = **spheresSSBO
 		};
 		uint64_t sphereAddress = mDevice.getBufferAddress(info);
-
 		info.buffer = **bvhSSBO;
 		uint64_t bvhAddress = mDevice.getBufferAddress(info);
 
