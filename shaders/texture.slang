@@ -6,6 +6,8 @@ public enum TextureType: uint {
 	Image
 };
 
+static constexpr float PI = 3.1415926535897932385;
+
 public struct Texture {
 	private TextureType type;
 	private float3 color;
@@ -25,5 +27,12 @@ public struct Texture {
         }
         
         return float3(0.0, 0.0, 0.0);
+    }
+
+    public static float2 uvFromPoint(float3 p) {
+        float theta = acos(-p.y);
+        float phi = atan2(-p.z, p.x) + PI;
+
+        return float2(phi / (2*PI), theta / PI);
     }
 };

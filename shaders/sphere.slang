@@ -2,6 +2,7 @@ module sphere;
 import ray;
 import hitRecord;
 import material;
+import texture;
 
 public struct SphereData {
     public float4 centerRadius;
@@ -50,6 +51,7 @@ public struct Sphere {
 
         float3 outwardNormal = (rec.point - currentCenter) / radius;
         rec.setFaceNormal(ray, outwardNormal);
+        rec.uv = Texture::uvFromPoint(outwardNormal);
 
         return true;
     }
