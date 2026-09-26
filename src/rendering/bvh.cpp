@@ -14,9 +14,9 @@ BVHNode::BVHNode(std::vector<std::shared_ptr<Hittable> >& objects, const size_t 
 
 	const int axis = bounds.longestAxis();
 
-	if (const size_t object_span = end - start; object_span == 1) {
+	if (const size_t objectCount = end - start; objectCount == 1) {
 		left = right = objects[start];
-	} else if (object_span == 2) {
+	} else if (objectCount == 2) {
 		left = objects[start];
 		right = objects[start + 1];
 	} else {
@@ -27,7 +27,7 @@ BVHNode::BVHNode(std::vector<std::shared_ptr<Hittable> >& objects, const size_t 
 			          return a_axis_interval.x < b_axis_interval.x;
 		          });
 
-		const auto mid = start + object_span / 2;
+		const auto mid = start + objectCount / 2;
 		left = std::make_shared<BVHNode>(objects, start, mid);
 		right = std::make_shared<BVHNode>(objects, mid, end);
 	}
@@ -58,34 +58,33 @@ std::vector<GPUBVHNode> BVHNode::flatten(const BVHNode& root,
 		return address;
 	};
 
+	std::function<uint32_t(const BVHNode&)> visit;
 
-	std::function<uint32_t(const BVHNode&)> visit = [&](const BVHNode& node) -> uint32_t {
+	auto makeRef = [&](const std::shared_ptr<Hittable>& obj) -> HittableRef {
+		if (const auto* bvh = dynamic_cast<BVHNode*>(obj.get())) {
+			const uint32_t index = visit(*bvh);
+
+			return {
+				.address = bvhBaseAddress + index * sizeof(GPUBVHNode),
+				.type = BVHType
+			};
+		}
+
+		if (const auto* sphere = dynamic_cast<Sphere*>(obj.get())) {
+			return {.address = getSphereAddress(sphere), .type = SphereType};
+		}
+		return {};
+	};
+
+	visit = [&](const BVHNode& node) -> uint32_t {
 		const uint32_t index = gpuNodes.size();
 
 		// Reserve the slot before processing children.
 		gpuNodes.emplace_back();
 
 		gpuNodes[index].bounds = node.bounds;
-
-		if (const auto* bvh = dynamic_cast<BVHNode*>(node.left.get())) {
-			const uint32_t leftIndex = visit(*bvh);
-			gpuNodes[index].left = {
-				.address = bvhBaseAddress + leftIndex * sizeof(GPUBVHNode),
-				.type = BVHType
-			};
-		} else if (const auto* sphere = dynamic_cast<Sphere*>(node.left.get())) {
-			gpuNodes[index].left = {.address = getSphereAddress(sphere), .type = SphereType};
-		}
-
-		if (const auto* bvh = dynamic_cast<BVHNode*>(node.right.get())) {
-			const uint32_t rightIndex = visit(*bvh);
-			gpuNodes[index].right = {
-				.address = bvhBaseAddress + rightIndex * sizeof(GPUBVHNode),
-				.type = BVHType
-			};
-		} else if (const auto* sphere = dynamic_cast<Sphere*>(node.right.get())) {
-			gpuNodes[index].right = {.address = getSphereAddress(sphere), .type = SphereType};
-		}
+		gpuNodes[index].left = makeRef(node.left);
+		gpuNodes[index].right = makeRef(node.right);
 
 		return index;
 	};
