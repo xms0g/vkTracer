@@ -12,7 +12,7 @@ namespace Lambertian {
             scatterDir = rec.normal;
         }
         scattered = {rec.point, scatterDir, in.time};
-        attenuation = rec.material.color.rgb;
+        attenuation = rec.material.texture.sample(rec.uv, rec.point);
         return true;
     }
 };
@@ -23,7 +23,7 @@ namespace Metal {
         float3 reflected = reflect(in.direction, rec.normal);
         reflected = normalize(reflected) + (fuzz * rand.randomUnitVector());
         scattered = {rec.point, reflected, in.time};
-        attenuation = rec.material.color.rgb;
+        attenuation = rec.material.texture.sample(rec.uv, rec.point);
         return (dot(scattered.direction, rec.normal) > 0);
     }
 };

@@ -1,5 +1,6 @@
 module hitRecord;
 import ray;
+import texture;
 
 public enum MaterialType: uint {
 	Lambertian,
@@ -8,7 +9,7 @@ public enum MaterialType: uint {
 };
 
 public struct Material {
-	public float4 color;
+	public Texture texture;
 	public MaterialType type;
 	public float fuzz;
 	public float refractionIndex;
@@ -19,6 +20,7 @@ public struct HitRecord {
     private float3 p;
     private float3 n;
     private float t;
+    private float2 uv_;
     private Material mat;
     private bool ff;
 
@@ -33,6 +35,10 @@ public struct HitRecord {
     public property float interval {
         get { return t; }
         set { t = newValue; }
+    }
+    public property float2 uv {
+        get { return uv_; }
+        set { uv_ = newValue; }
     }
     public property Material material {
         get { return mat; }

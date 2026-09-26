@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 #include "hittable.hpp"
 #include "aabb.hpp"
+#include "texture.hpp"
 
 enum class MaterialType: uint32_t {
 	Lambertian = 0,
@@ -11,7 +12,7 @@ enum class MaterialType: uint32_t {
 };
 
 struct Material {
-	glm::vec4 albedo;
+	Texture texture;
 	MaterialType type;
 	float fuzz;
 	float refractionIndex;
@@ -57,21 +58,21 @@ struct Sphere : Hittable {
 		spheres.emplace_back(std::make_shared<Sphere>(
 			glm::vec4(-4.0, 1.0, 0.0, 1.0f),
 			glm::vec4(0.0, 0.0, 0.0f, 0.0f), Material{
-				.albedo = {0.4, 0.2, 0.1, 0.0},
+				.texture = {.type = TextureType::SolidColor, .color = glm::vec3(0.2, 0.1, 0.0)},
 				.type = MaterialType::Lambertian
 			}));
 
 		spheres.emplace_back(std::make_shared<Sphere>(
 			glm::vec4(4.0f, 1.0f, 0.0f, 1.0f),
 			glm::vec4(0.0, 0.0, 0.0f, 0.0f), Material{
-				.albedo = {0.7, 0.6, 0.5, 0.0},
+				.texture = {.type = TextureType::SolidColor, .color = glm::vec3(0.7, 0.6, 0.5)},
 				.type = MaterialType::Metal,
 			}));
 
 		spheres.emplace_back(std::make_shared<Sphere>(
 			glm::vec4(0.0f, -100.5f, 0.0f, 100.5f),
 			glm::vec4(0.0, 0.0, 0.0f, 0.0f), Material{
-				.albedo = {0.8, 0.8, 0.5, 0.0},
+				.texture = {.type = TextureType::Checker, .color = glm::vec3(0.8, 0.8, 0.5)},
 				.type = MaterialType::Lambertian
 			}));
 
@@ -90,14 +91,15 @@ struct Sphere : Hittable {
 				if (glm::length(center - glm::vec3(4, 0.2, 0)) > 0.9) {
 					if (chooseMat < 0.8) {
 						// diffuse
-						const auto albedo = glm::vec4(dis(gen), dis(gen), dis(gen), 0.0f);
-						Material mat = {.albedo = albedo, .type = MaterialType::Lambertian};
+						const auto albedo = glm::vec3(dis(gen), dis(gen), dis(gen));
+						Material mat = {.texture = {.type = TextureType::SolidColor, .color = albedo}, .type = MaterialType::Lambertian};
+
 						auto center2 = glm::vec4(center + glm::vec3(0, fuzzDis(gen), 0), 0.0);
 						spheres.emplace_back(std::make_shared<Sphere>(centerRad, center2, mat));
 					} else if (chooseMat < 0.95) {
 						// metal
-						const auto albedo = glm::vec4(albedoDis(gen), albedoDis(gen), albedoDis(gen), 0.0f);
-						Material mat = {.albedo = albedo, .type = MaterialType::Metal, .fuzz = fuzzDis(gen)};
+						const auto albedo = glm::vec3(albedoDis(gen), albedoDis(gen), albedoDis(gen));
+						Material mat = {.texture = {.type = TextureType::SolidColor, .color = albedo}, .type = MaterialType::Metal, .fuzz = fuzzDis(gen)};
 						spheres.emplace_back(std::make_shared<Sphere>(centerRad, glm::vec4(0.0), mat));
 					} else {
 						// glass
