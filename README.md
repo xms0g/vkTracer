@@ -8,8 +8,10 @@ Ray generation, intersection tests, material scattering, and pixel sampling are 
 ![License](https://img.shields.io/badge/License-BSD%203--Clause-green)
 ![Screenshot](assets/demo.gif)
 ## Features
-- Sphere intersection (reflection/refraction)
-- Lambertian,metallic and dielectric materials
+- Sphere intersection
+- Lambertian, metallic, and dielectric materials
+- Reflection/refraction
+- BVH
 - Anti-aliasing
 - Gamma correction
 - Interactive camera
