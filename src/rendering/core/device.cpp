@@ -700,7 +700,7 @@ void Device::createSyncObjects() {
 
 void Device::copyBuffer(const Buffer& srcBuffer, const Buffer& dstBuffer, const vk::DeviceSize size) const {
 	const auto cmd = beginSingleTimeCommands();
-	(*cmd).copyBuffer(*srcBuffer, *dstBuffer, vk::BufferCopy(0, 0, size));
+	(*cmd).copyBuffer(**srcBuffer, **dstBuffer, vk::BufferCopy(0, 0, size));
 	endSingleTimeCommands(cmd);
 }
 
