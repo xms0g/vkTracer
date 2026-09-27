@@ -566,7 +566,7 @@ void Device::recordGraphicsCommandBuffer(const uint32_t imageIndex) {
 	Image::transitionImageLayout(
 		image,
 		vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-		{},
+		vk::AccessFlagBits2::eNone,
 		vk::PipelineStageFlagBits2::eColorAttachmentOutput,
 		vk::AccessFlagBits2::eColorAttachmentWrite,
 		vk::ImageLayout::eUndefined,
@@ -614,8 +614,8 @@ void Device::recordGraphicsCommandBuffer(const uint32_t imageIndex) {
 		image,
 		vk::PipelineStageFlagBits2::eColorAttachmentOutput,
 		vk::AccessFlagBits2::eColorAttachmentWrite,
-		vk::PipelineStageFlagBits2::eBottomOfPipe,
-		{},
+		vk::PipelineStageFlagBits2::eNone,
+		vk::AccessFlagBits2::eNone,
 		vk::ImageLayout::eColorAttachmentOptimal,
 		vk::ImageLayout::ePresentSrcKHR,
 		commandBuffer
@@ -631,7 +631,7 @@ void Device::recordComputeCommandBuffer() {
 	Image::transitionImageLayout(
 		**mShaderStorageImages[mFrameIndex],
 		vk::PipelineStageFlagBits2::eTopOfPipe,
-		{},
+		vk::AccessFlagBits2::eNone,
 		vk::PipelineStageFlagBits2::eComputeShader,
 		vk::AccessFlagBits2::eShaderWrite,
 		vk::ImageLayout::eUndefined,
