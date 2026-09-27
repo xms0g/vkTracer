@@ -6,6 +6,7 @@
 #include "commandPool.hpp"
 #include "descriptorPool.hpp"
 #include "descriptorSetLayout.hpp"
+#include "image.hpp"
 #include "pipelineBuilder.hpp"
 #include "swapchain.hpp"
 
@@ -61,7 +62,9 @@ private:
 
 	void createShaderStorageImage();
 
-	void createSampler();
+	void createTextureImage(std::string_view path);
+
+	void createSamplers();
 
 	void createDescriptorSets();
 
@@ -75,10 +78,15 @@ private:
 
 	void copyBuffer(const Buffer& srcBuffer, const Buffer& dstBuffer, vk::DeviceSize size) const;
 
-	[[nodiscard]]
-	vk::raii::CommandBuffer beginSingleTimeCommands() const;
+	void copyBufferToImage(const Buffer& srcBuffer,
+	                       const Image& dstImage,
+	                       uint32_t width,
+	                       uint32_t height) const;
 
-	void endSingleTimeCommands(const vk::raii::CommandBuffer& commandBuffer) const;
+	[[nodiscard]]
+	CommandBuffer beginSingleTimeCommands() const;
+
+	void endSingleTimeCommands(const CommandBuffer& commandBuffer) const;
 
 	// Support Functions
 	[[nodiscard]]
@@ -128,6 +136,8 @@ private:
 	std::vector<Buffer> mShaderStorageBuffers;
 	std::vector<uint64_t> mShaderStorageBufferAddresses;
 	vk::raii::Sampler mSampler{nullptr};
+	Image mTextureImage{};
+	vk::raii::Sampler mTextureSampler{nullptr};
 	CommandPool mCommandPool;
 	std::vector<CommandBuffer> mGraphicsCommandBuffers;
 	std::vector<CommandBuffer> mComputeCommandBuffers;

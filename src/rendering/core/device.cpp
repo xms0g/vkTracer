@@ -10,6 +10,7 @@
 #include <SDL_vulkan.h>
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
+#include "image/stb_image.h"
 #include "buffer.hpp"
 #include "swapchain.hpp"
 #include "commandPool.hpp"
@@ -24,6 +25,7 @@
 #include "../../core/window.hpp"
 #include "../../config/config.hpp"
 #include "../../core/camera.hpp"
+#include "../../io/filesystem.hpp"
 
 Device::Device(Window& window, Camera& camera)
 	: mWindow(window),
@@ -45,7 +47,8 @@ void Device::init() {
 		createCommandPool();
 		createShaderStorageImage();
 		createShaderStorageBuffers();
-		createSampler();
+		createTextureImage(TEXTURE_PATH);
+		createSamplers();
 		createDescriptorPool();
 		createDescriptorSets();
 		createCommandBuffers();
@@ -278,6 +281,11 @@ void Device::createDescriptorSetLayout() {
 				vk::DescriptorType::eStorageImage,
 				1,
 				vk::ShaderStageFlagBits::eCompute)
+			.addBinding(
+				2,
+				vk::DescriptorType::eCombinedImageSampler,
+				1,
+				vk::ShaderStageFlagBits::eCompute)
 			.build();
 
 	mGraphicsDescriptorSetLayout = DescriptorSetLayout(mDevice);
@@ -320,10 +328,10 @@ void Device::createCommandPool() {
 void Device::createDescriptorPool() {
 	mDescriptorPool = DescriptorPool(mDevice);
 	mDescriptorPool
-			.addMaxSets(MAX_FRAMES_IN_FLIGHT * 2)
+			.addMaxSets(MAX_FRAMES_IN_FLIGHT * 3)
 			.addPoolFlags(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet)
 			.addPoolSize(vk::DescriptorType::eStorageImage, MAX_FRAMES_IN_FLIGHT)
-			.addPoolSize(vk::DescriptorType::eCombinedImageSampler, MAX_FRAMES_IN_FLIGHT)
+			.addPoolSize(vk::DescriptorType::eCombinedImageSampler, MAX_FRAMES_IN_FLIGHT * 2)
 			.build();
 }
 
@@ -364,7 +372,8 @@ void Device::createShaderStorageBuffers() {
 			vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst |
 			vk::BufferUsageFlagBits::eShaderDeviceAddress,
 			vk::MemoryPropertyFlagBits::eDeviceLocal,
-			vk::MemoryAllocateFlagsInfo{.flags = vk::MemoryAllocateFlagBits::eDeviceAddress}};
+			vk::MemoryAllocateFlagsInfo{.flags = vk::MemoryAllocateFlagBits::eDeviceAddress}
+		};
 
 		Buffer bvhSSBO{
 			bvhBufferSize,
@@ -373,7 +382,8 @@ void Device::createShaderStorageBuffers() {
 			vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst |
 			vk::BufferUsageFlagBits::eShaderDeviceAddress,
 			vk::MemoryPropertyFlagBits::eDeviceLocal,
-			vk::MemoryAllocateFlagsInfo{.flags = vk::MemoryAllocateFlagBits::eDeviceAddress}};
+			vk::MemoryAllocateFlagsInfo{.flags = vk::MemoryAllocateFlagBits::eDeviceAddress}
+		};
 
 		vk::BufferDeviceAddressInfo info{
 			.buffer = **spheresSSBO
@@ -423,7 +433,67 @@ void Device::createShaderStorageImage() {
 	}
 }
 
-void Device::createSampler() {
+void Device::createTextureImage(const std::string_view path) {
+	int32_t texWidth, texHeight, texChannels;
+	void* pixels = stbi_load(fs::path(path.data()).c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+
+	const vk::DeviceSize imageSize = texWidth * texHeight * 4;
+	const uint32_t mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
+
+	if (!pixels) {
+		throw std::runtime_error("Failed to load texture image!");
+	}
+
+	Buffer stagingBuffer{
+		imageSize,
+		mDevice,
+		mPhysicalDevice,
+		vk::BufferUsageFlagBits::eTransferSrc,
+		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
+	};
+
+	void* mem = stagingBuffer.map(imageSize);
+	memcpy(mem, pixels, imageSize);
+	stagingBuffer.unmap();
+
+	stbi_image_free(pixels);
+
+	mTextureImage = Image(
+		mDevice,
+		mPhysicalDevice,
+		ImageConfig{
+			.width = static_cast<uint32_t>(texWidth),
+			.height = static_cast<uint32_t>(texHeight),
+			.mipLevels = mipLevels,
+			.numSamples = vk::SampleCountFlagBits::e1,
+			.format = vk::Format::eR8G8B8A8Srgb,
+			.tiling = vk::ImageTiling::eOptimal,
+			.usage = vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst |
+			         vk::ImageUsageFlagBits::eSampled,
+			.properties = vk::MemoryPropertyFlagBits::eDeviceLocal
+		});
+
+	copyBufferToImage(stagingBuffer, mTextureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+}
+
+void Device::createSamplers() {
+	const vk::PhysicalDeviceProperties properties = mPhysicalDevice.getProperties();
+	const vk::SamplerCreateInfo textureSamplerInfo{
+		.magFilter = vk::Filter::eLinear,
+		.minFilter = vk::Filter::eLinear,
+		.mipmapMode = vk::SamplerMipmapMode::eLinear,
+		.addressModeU = vk::SamplerAddressMode::eRepeat,
+		.addressModeV = vk::SamplerAddressMode::eRepeat,
+		.addressModeW = vk::SamplerAddressMode::eRepeat,
+		.mipLodBias = 0.0f,
+		.anisotropyEnable = vk::True,
+		.maxAnisotropy = properties.limits.maxSamplerAnisotropy,
+		.compareEnable = vk::False,
+		.compareOp = vk::CompareOp::eAlways,
+		.minLod = 0.0f,
+		.maxLod = vk::LodClampNone
+	};
+
 	constexpr vk::SamplerCreateInfo samplerInfo{
 		.magFilter = vk::Filter::eNearest,
 		.minFilter = vk::Filter::eNearest,
@@ -441,6 +511,7 @@ void Device::createSampler() {
 	};
 
 	mSampler = vk::raii::Sampler(mDevice, samplerInfo);
+	mTextureSampler = vk::raii::Sampler(mDevice, textureSamplerInfo);
 }
 
 void Device::createDescriptorSets() {
@@ -464,7 +535,14 @@ void Device::createDescriptorSets() {
 					vk::DescriptorType::eCombinedImageSampler,
 					mShaderStorageImages[i].view(),
 					vk::ImageLayout::eShaderReadOnlyOptimal,
-					mSampler);
+					mSampler)
+				.writeImage(
+					*mComputeDescriptorSets[i],
+					2,
+					vk::DescriptorType::eCombinedImageSampler,
+					mTextureImage.view(),
+					vk::ImageLayout::eShaderReadOnlyOptimal,
+					mTextureSampler);
 
 		writer.update();
 	}
@@ -623,29 +701,66 @@ void Device::createSyncObjects() {
 }
 
 void Device::copyBuffer(const Buffer& srcBuffer, const Buffer& dstBuffer, const vk::DeviceSize size) const {
-	const vk::raii::CommandBuffer commandCopyBuffer = beginSingleTimeCommands();
-	commandCopyBuffer.copyBuffer(*srcBuffer, *dstBuffer, vk::BufferCopy(0, 0, size));
-	endSingleTimeCommands(commandCopyBuffer);
+	const auto cmd = beginSingleTimeCommands();
+	(*cmd).copyBuffer(*srcBuffer, *dstBuffer, vk::BufferCopy(0, 0, size));
+	endSingleTimeCommands(cmd);
 }
 
-vk::raii::CommandBuffer Device::beginSingleTimeCommands() const {
-	const vk::CommandBufferAllocateInfo allocInfo{
-		.commandPool = **mCommandPool,
-		.level = vk::CommandBufferLevel::ePrimary,
-		.commandBufferCount = 1
+void Device::copyBufferToImage(const Buffer& srcBuffer,
+                               const Image& dstImage,
+                               const uint32_t width,
+                               const uint32_t height) const {
+	const auto cmd = beginSingleTimeCommands();
+
+	Image::transitionImageLayout(
+		**dstImage,
+		vk::PipelineStageFlagBits2::eTopOfPipe,
+		vk::AccessFlagBits2::eNone,
+		vk::PipelineStageFlagBits2::eTransfer,
+		vk::AccessFlagBits2::eTransferWrite,
+		vk::ImageLayout::eUndefined,
+		vk::ImageLayout::eTransferDstOptimal,
+		cmd
+	);
+
+	vk::BufferImageCopy region{
+		.bufferOffset = 0,
+		.bufferRowLength = 0,
+		.bufferImageHeight = 0,
+		.imageSubresource = {.aspectMask = vk::ImageAspectFlagBits::eColor, .mipLevel = 0, .baseArrayLayer = 0, .layerCount = 1},
+		.imageOffset = {.x = 0, .y = 0, .z = 0},
+		.imageExtent = {.width = width, .height = height, .depth = 1}
 	};
 
-	vk::raii::CommandBuffer commandBuffer = std::move(mDevice.allocateCommandBuffers(allocInfo).front());
+	(*cmd).copyBufferToImage(**srcBuffer, **dstImage, vk::ImageLayout::eTransferDstOptimal, {region});
+
+	Image::transitionImageLayout(
+		**dstImage,
+		vk::PipelineStageFlagBits2::eTransfer,
+		vk::AccessFlagBits2::eTransferWrite,
+		vk::PipelineStageFlagBits2::eFragmentShader,
+		vk::AccessFlagBits2::eShaderSampledRead,
+		vk::ImageLayout::eTransferDstOptimal,
+		vk::ImageLayout::eShaderReadOnlyOptimal,
+		cmd
+	);
+
+	endSingleTimeCommands(cmd);
+}
+
+CommandBuffer Device::beginSingleTimeCommands() const {
+	auto commandBuffer = CommandBuffer(mDevice, mCommandPool, vk::CommandBufferLevel::ePrimary);
+
 	constexpr vk::CommandBufferBeginInfo beginInfo{.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit};
-	commandBuffer.begin(beginInfo);
+	(*commandBuffer).begin(beginInfo);
 
 	return commandBuffer;
 }
 
-void Device::endSingleTimeCommands(const vk::raii::CommandBuffer& commandBuffer) const {
-	commandBuffer.end();
+void Device::endSingleTimeCommands(const CommandBuffer& commandBuffer) const {
+	(*commandBuffer).end();
 
-	const vk::SubmitInfo submitInfo{.commandBufferCount = 1, .pCommandBuffers = &*commandBuffer};
+	const vk::SubmitInfo submitInfo{.commandBufferCount = 1, .pCommandBuffers = &**commandBuffer};
 
 	mQueue.submit(submitInfo, nullptr);
 	mQueue.waitIdle();
@@ -713,7 +828,8 @@ bool Device::checkDeviceSuitable(const vk::raii::PhysicalDevice& phyDevice) {
 	bool supportBufferDeviceAddress = features2.get<vk::PhysicalDeviceVulkan12Features>().bufferDeviceAddress;
 	bool supportsDynamicRendering = features2.get<vk::PhysicalDeviceVulkan13Features>().dynamicRendering;
 	bool supportsSynchronization2 = features2.get<vk::PhysicalDeviceVulkan13Features>().synchronization2;
-	bool supportsExtendedDynamicState = features2.get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>().extendedDynamicState;
+	bool supportsExtendedDynamicState = features2.get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>().
+			extendedDynamicState;
 	bool supportsRequiredFeatures =
 			supportsSamplerAnisotropy &&
 			supportsShaderDrawParameters &&

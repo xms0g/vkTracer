@@ -19,9 +19,15 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/slangHelpers.cmake)
 
 file(GLOB_RECURSE SRC "src/*")
 
-add_executable(${PROJECT_NAME} ${SRC})
+set(LIBS_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/libs)
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${GLM_INCLUDE_DIRS})
+set(STB_IMAGE
+        ${CMAKE_CURRENT_SOURCE_DIR}/libs/image/stb_image.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/libs/image/stb_image.h)
+
+add_executable(${PROJECT_NAME} ${SRC} ${STB_IMAGE})
+
+target_include_directories(${PROJECT_NAME} PUBLIC ${LIBS_INCLUDE_DIRS} ${GLM_INCLUDE_DIRS})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${SDL2_LIBRARIES} Vulkan::Vulkan)
 

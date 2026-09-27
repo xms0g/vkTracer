@@ -1,5 +1,8 @@
 module texture;
 
+[[vk::binding(2, 0)]]
+Sampler2D image;
+
 public enum TextureType: uint {
 	SolidColor,
     Checker,
@@ -24,6 +27,10 @@ public struct Texture {
             } else {
                 return float3(0.9, 0.9, 0.9);
             }
+        }
+
+        if (type == TextureType::Image) {
+            return image.SampleLevel(uv, 0.0).rgb;
         }
         
         return float3(0.0, 0.0, 0.0);
