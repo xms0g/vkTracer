@@ -6,13 +6,15 @@ Ray generation, intersection tests, material scattering, and pixel sampling are 
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20MacOS-blue)
 ![Graphics](https://img.shields.io/badge/API-Vulkan-ac162c)
 ![License](https://img.shields.io/badge/License-BSD%203--Clause-green)
-![Screenshot](assets/demo.gif)
+![Demo](assets/demo.gif)
+![Screenshot](assets/screenshot.png)
 ## Features
 - Sphere intersection
 - Lambertian, metallic, and dielectric materials
 - Reflection/refraction
 - BVH
 - Anti-aliasing
+- Texture mapping
 - Gamma correction
 - Interactive camera
 ## License

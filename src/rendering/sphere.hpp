@@ -56,14 +56,14 @@ struct Sphere : Hittable {
 				.refractionIndex = 1.5
 			}));
 		spheres.emplace_back(std::make_shared<Sphere>(
-			glm::vec4(-4.0, 1.0, 0.0, 1.0f),
+			glm::vec4(-3.0, 1.0, 0.0, 1.0f),
 			glm::vec4(0.0, 0.0, 0.0f, 0.0f), Material{
 				.texture = {.type = TextureType::Image},
 				.type = MaterialType::Lambertian
 			}));
 
 		spheres.emplace_back(std::make_shared<Sphere>(
-			glm::vec4(4.0f, 1.0f, 0.0f, 1.0f),
+			glm::vec4(3.0f, 1.0f, 0.0f, 1.0f),
 			glm::vec4(0.0, 0.0, 0.0f, 0.0f), Material{
 				.texture = {.type = TextureType::SolidColor, .color = glm::vec3(0.7, 0.6, 0.5)},
 				.type = MaterialType::Metal,
