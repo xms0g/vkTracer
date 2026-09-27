@@ -648,20 +648,18 @@ void Device::recordComputeCommandBuffer() {
 		0,
 		{mComputeDescriptorSets[mFrameIndex]}, {});
 
-	const ComputePushConstants pc{
-		.bufferAddress = mShaderStorageBufferAddresses[mFrameIndex],
-		.resolution = glm::vec4(WIDTH, HEIGHT, 0, 0),
-		.camCenter = glm::vec4(mCamera.center(), 0.0f),
-		.camFront = glm::vec4(mCamera.front(), 0.0f),
-		.camRight = glm::vec4(mCamera.right(), 0.0f),
-		.camUp = glm::vec4(mCamera.up(), 0.0f),
-	};
-
-	(*commandBuffer).pushConstants(
+	(*commandBuffer).pushConstants<ComputePushConstants>(
 		mComputePipeline.layout(),
 		vk::ShaderStageFlagBits::eCompute,
 		0,
-		vk::ArrayProxy<const ComputePushConstants>(pc));
+		ComputePushConstants{
+			.bufferAddress = mShaderStorageBufferAddresses[mFrameIndex],
+			.resolution = glm::vec4(WIDTH, HEIGHT, 0, 0),
+			.camCenter = glm::vec4(mCamera.center(), 0.0f),
+			.camFront = glm::vec4(mCamera.front(), 0.0f),
+			.camRight = glm::vec4(mCamera.right(), 0.0f),
+			.camUp = glm::vec4(mCamera.up(), 0.0f),
+		});
 
 	(*commandBuffer).dispatch(
 		WIDTH / THREADS_PER_GROUP,
@@ -700,7 +698,12 @@ void Device::createSyncObjects() {
 
 void Device::copyBuffer(const Buffer& srcBuffer, const Buffer& dstBuffer, const vk::DeviceSize size) const {
 	const auto cmd = beginSingleTimeCommands();
-	(*cmd).copyBuffer(**srcBuffer, **dstBuffer, vk::BufferCopy(0, 0, size));
+	(*cmd).copyBuffer(
+		**srcBuffer,
+		**dstBuffer,
+		vk::BufferCopy{
+			.srcOffset = 0, .dstOffset = 0, .size = size
+		});
 	endSingleTimeCommands(cmd);
 }
 
@@ -721,16 +724,20 @@ void Device::copyBufferToImage(const Buffer& srcBuffer,
 		cmd
 	);
 
-	vk::BufferImageCopy region{
-		.bufferOffset = 0,
-		.bufferRowLength = 0,
-		.bufferImageHeight = 0,
-		.imageSubresource = {.aspectMask = vk::ImageAspectFlagBits::eColor, .mipLevel = 0, .baseArrayLayer = 0, .layerCount = 1},
-		.imageOffset = {.x = 0, .y = 0, .z = 0},
-		.imageExtent = {.width = width, .height = height, .depth = 1}
-	};
-
-	(*cmd).copyBufferToImage(**srcBuffer, **dstImage, vk::ImageLayout::eTransferDstOptimal, {region});
+	(*cmd).copyBufferToImage(
+		**srcBuffer,
+		**dstImage,
+		vk::ImageLayout::eTransferDstOptimal,
+		vk::BufferImageCopy{
+			.bufferOffset = 0,
+			.bufferRowLength = 0,
+			.bufferImageHeight = 0,
+			.imageSubresource = {
+				.aspectMask = vk::ImageAspectFlagBits::eColor, .mipLevel = 0, .baseArrayLayer = 0, .layerCount = 1
+			},
+			.imageOffset = {.x = 0, .y = 0, .z = 0},
+			.imageExtent = {.width = width, .height = height, .depth = 1}
+		});
 
 	Image::transitionImageLayout(
 		**dstImage,
