@@ -468,8 +468,7 @@ void Device::createTextureImage(const std::string_view path) {
 			.numSamples = vk::SampleCountFlagBits::e1,
 			.format = vk::Format::eR8G8B8A8Srgb,
 			.tiling = vk::ImageTiling::eOptimal,
-			.usage = vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst |
-			         vk::ImageUsageFlagBits::eSampled,
+			.usage = vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
 			.properties = vk::MemoryPropertyFlagBits::eDeviceLocal
 		});
 
