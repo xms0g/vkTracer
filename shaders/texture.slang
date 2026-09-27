@@ -30,7 +30,10 @@ public struct Texture {
         }
 
         if (type == TextureType::Image) {
-            return image.SampleLevel(uv, 0.0).rgb;
+            float2 uvClamped = clamp(uv, float2(0.0, 0.0), float2(1.0, 1.0));
+            uvClamped.y = 1.0 - uvClamped.y; // Flip the y-coordinate for correct orientation
+            
+            return image.SampleLevel(uvClamped, 0.0).rgb;
         }
         
         return float3(0.0, 0.0, 0.0);
