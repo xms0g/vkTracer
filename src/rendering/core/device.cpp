@@ -574,14 +574,12 @@ void Device::recordGraphicsCommandBuffer(const uint32_t imageIndex) {
 		commandBuffer
 	);
 
-	constexpr vk::ClearValue clearColor = vk::ClearColorValue(0.0f, 0.0f, 0.0f, 1.0f);
-
 	vk::RenderingAttachmentInfo attachmentInfo = {
 		.imageView = mSwapchain.imageView(imageIndex),
 		.imageLayout = vk::ImageLayout::eColorAttachmentOptimal,
 		.loadOp = vk::AttachmentLoadOp::eClear,
 		.storeOp = vk::AttachmentStoreOp::eStore,
-		.clearValue = clearColor
+		.clearValue = vk::ClearColorValue(0.0f, 0.0f, 0.0f, 1.0f)
 	};
 
 	const vk::RenderingInfo renderingInfo = {
