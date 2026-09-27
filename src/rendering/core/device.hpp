@@ -133,11 +133,10 @@ private:
 	GraphicsPipeline mGraphicsPipeline{};
 	ComputePipeline mComputePipeline{};
 	std::vector<Image> mShaderStorageImages;
+	std::vector<Image> mTextureImages;
 	std::vector<Buffer> mShaderStorageBuffers;
 	std::vector<uint64_t> mShaderStorageBufferAddresses;
-	vk::raii::Sampler mSampler{nullptr};
-	Image mTextureImage{};
-	vk::raii::Sampler mTextureSampler{nullptr};
+	std::vector<vk::raii::Sampler> mSamplers;
 	CommandPool mCommandPool;
 	std::vector<CommandBuffer> mGraphicsCommandBuffers;
 	std::vector<CommandBuffer> mComputeCommandBuffers;

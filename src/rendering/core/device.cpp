@@ -457,7 +457,7 @@ void Device::createTextureImage(const std::string_view path) {
 
 	stbi_image_free(pixels);
 
-	mTextureImage = Image(
+	mTextureImages.emplace_back(
 		mDevice,
 		mPhysicalDevice,
 		ImageConfig{
@@ -471,7 +471,7 @@ void Device::createTextureImage(const std::string_view path) {
 			.properties = vk::MemoryPropertyFlagBits::eDeviceLocal
 		});
 
-	copyBufferToImage(stagingBuffer, mTextureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+	copyBufferToImage(stagingBuffer, mTextureImages.back(), static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
 }
 
 void Device::createSamplers() {
@@ -508,8 +508,8 @@ void Device::createSamplers() {
 		.maxLod = 0.0f
 	};
 
-	mSampler = vk::raii::Sampler(mDevice, samplerInfo);
-	mTextureSampler = vk::raii::Sampler(mDevice, textureSamplerInfo);
+	mSamplers.emplace_back(mDevice, samplerInfo);
+	mSamplers.emplace_back(mDevice, textureSamplerInfo);
 }
 
 void Device::createDescriptorSets() {
@@ -518,7 +518,7 @@ void Device::createDescriptorSets() {
 	mGraphicsDescriptorSets = allocator.allocate(MAX_FRAMES_IN_FLIGHT, **mGraphicsDescriptorSetLayout);
 
 	DescriptorSetWriter writer(mDevice);
-	writer.reserve(MAX_FRAMES_IN_FLIGHT * 2);
+	writer.reserve(MAX_FRAMES_IN_FLIGHT * 3);
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
 		writer.writeImage(
@@ -533,14 +533,14 @@ void Device::createDescriptorSets() {
 					vk::DescriptorType::eCombinedImageSampler,
 					mShaderStorageImages[i].view(),
 					vk::ImageLayout::eShaderReadOnlyOptimal,
-					mSampler)
+					mSamplers.front())
 				.writeImage(
 					*mComputeDescriptorSets[i],
 					2,
 					vk::DescriptorType::eCombinedImageSampler,
-					mTextureImage.view(),
+					mTextureImages.back().view(),
 					vk::ImageLayout::eShaderReadOnlyOptimal,
-					mTextureSampler);
+					mSamplers.back());
 
 		writer.update();
 	}
@@ -557,9 +557,9 @@ void Device::createCommandBuffers() {
 }
 
 void Device::recordGraphicsCommandBuffer(const uint32_t imageIndex) {
-	const auto& commandBuffer = mGraphicsCommandBuffers[mFrameIndex];
-	(*commandBuffer).reset();
-	(*commandBuffer).begin({});
+	const auto& cmd = mGraphicsCommandBuffers[mFrameIndex];
+	(*cmd).reset();
+	(*cmd).begin({});
 
 	const auto& image = mSwapchain.image(imageIndex);
 	// Before starting rendering, transition the swapchain image to COLOR_ATTACHMENT_OPTIMAL
@@ -571,7 +571,7 @@ void Device::recordGraphicsCommandBuffer(const uint32_t imageIndex) {
 		vk::AccessFlagBits2::eColorAttachmentWrite,
 		vk::ImageLayout::eUndefined,
 		vk::ImageLayout::eColorAttachmentOptimal,
-		commandBuffer
+		cmd
 	);
 
 	vk::RenderingAttachmentInfo attachmentInfo = {
@@ -589,15 +589,15 @@ void Device::recordGraphicsCommandBuffer(const uint32_t imageIndex) {
 		.pColorAttachments = &attachmentInfo
 	};
 
-	(*commandBuffer).beginRendering(renderingInfo);
-	(*commandBuffer).bindPipeline(vk::PipelineBindPoint::eGraphics, **mGraphicsPipeline);
-	(*commandBuffer).bindDescriptorSets(
+	(*cmd).beginRendering(renderingInfo);
+	(*cmd).bindPipeline(vk::PipelineBindPoint::eGraphics, **mGraphicsPipeline);
+	(*cmd).bindDescriptorSets(
 		vk::PipelineBindPoint::eGraphics,
 		mGraphicsPipeline.layout(),
 		0,
 		{mGraphicsDescriptorSets[mFrameIndex]},
 		{});
-	(*commandBuffer).setViewport(
+	(*cmd).setViewport(
 		0,
 		vk::Viewport(
 			0.0f,
@@ -606,9 +606,9 @@ void Device::recordGraphicsCommandBuffer(const uint32_t imageIndex) {
 			static_cast<float>(mSwapchain.extent().height),
 			0.0f,
 			1.0f));
-	(*commandBuffer).setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), mSwapchain.extent()));
-	(*commandBuffer).draw(3, 1, 0, 0);
-	(*commandBuffer).endRendering();
+	(*cmd).setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), mSwapchain.extent()));
+	(*cmd).draw(3, 1, 0, 0);
+	(*cmd).endRendering();
 	// After rendering, transition the swapchain image to PRESENT_SRC
 	Image::transitionImageLayout(
 		image,
@@ -618,15 +618,15 @@ void Device::recordGraphicsCommandBuffer(const uint32_t imageIndex) {
 		vk::AccessFlagBits2::eNone,
 		vk::ImageLayout::eColorAttachmentOptimal,
 		vk::ImageLayout::ePresentSrcKHR,
-		commandBuffer
+		cmd
 	);
-	(*commandBuffer).end();
+	(*cmd).end();
 }
 
 void Device::recordComputeCommandBuffer() {
-	const auto& commandBuffer = mComputeCommandBuffers[mFrameIndex];
-	(*commandBuffer).reset();
-	(*commandBuffer).begin({});
+	const auto& cmd = mComputeCommandBuffers[mFrameIndex];
+	(*cmd).reset();
+	(*cmd).begin({});
 
 	Image::transitionImageLayout(
 		**mShaderStorageImages[mFrameIndex],
@@ -636,17 +636,17 @@ void Device::recordComputeCommandBuffer() {
 		vk::AccessFlagBits2::eShaderWrite,
 		vk::ImageLayout::eUndefined,
 		vk::ImageLayout::eGeneral,
-		commandBuffer
+		cmd
 	);
 
-	(*commandBuffer).bindPipeline(vk::PipelineBindPoint::eCompute, **mComputePipeline);
-	(*commandBuffer).bindDescriptorSets(
+	(*cmd).bindPipeline(vk::PipelineBindPoint::eCompute, **mComputePipeline);
+	(*cmd).bindDescriptorSets(
 		vk::PipelineBindPoint::eCompute,
 		mComputePipeline.layout(),
 		0,
 		{mComputeDescriptorSets[mFrameIndex]}, {});
 
-	(*commandBuffer).pushConstants<ComputePushConstants>(
+	(*cmd).pushConstants<ComputePushConstants>(
 		mComputePipeline.layout(),
 		vk::ShaderStageFlagBits::eCompute,
 		0,
@@ -659,7 +659,7 @@ void Device::recordComputeCommandBuffer() {
 			.camUp = glm::vec4(mCamera.up(), 0.0f),
 		});
 
-	(*commandBuffer).dispatch(
+	(*cmd).dispatch(
 		WIDTH / THREADS_PER_GROUP,
 		HEIGHT / THREADS_PER_GROUP,
 		1);
@@ -672,10 +672,10 @@ void Device::recordComputeCommandBuffer() {
 		vk::AccessFlagBits2::eShaderSampledRead,
 		vk::ImageLayout::eGeneral,
 		vk::ImageLayout::eShaderReadOnlyOptimal,
-		commandBuffer
+		cmd
 	);
 
-	(*commandBuffer).end();
+	(*cmd).end();
 }
 
 void Device::createSyncObjects() {
@@ -699,9 +699,7 @@ void Device::copyBuffer(const Buffer& srcBuffer, const Buffer& dstBuffer, const 
 	(*cmd).copyBuffer(
 		**srcBuffer,
 		**dstBuffer,
-		vk::BufferCopy{
-			.srcOffset = 0, .dstOffset = 0, .size = size
-		});
+		vk::BufferCopy{.srcOffset = 0, .dstOffset = 0, .size = size});
 	endSingleTimeCommands(cmd);
 }
 
@@ -731,7 +729,10 @@ void Device::copyBufferToImage(const Buffer& srcBuffer,
 			.bufferRowLength = 0,
 			.bufferImageHeight = 0,
 			.imageSubresource = {
-				.aspectMask = vk::ImageAspectFlagBits::eColor, .mipLevel = 0, .baseArrayLayer = 0, .layerCount = 1
+				.aspectMask = vk::ImageAspectFlagBits::eColor,
+				.mipLevel = 0,
+				.baseArrayLayer = 0,
+				.layerCount = 1
 			},
 			.imageOffset = {.x = 0, .y = 0, .z = 0},
 			.imageExtent = {.width = width, .height = height, .depth = 1}
