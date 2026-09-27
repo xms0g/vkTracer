@@ -438,7 +438,6 @@ void Device::createTextureImage(const std::string_view path) {
 	void* pixels = stbi_load(fs::path(path.data()).c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
 
 	const vk::DeviceSize imageSize = texWidth * texHeight * 4;
-	const uint32_t mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
 
 	if (!pixels) {
 		throw std::runtime_error("Failed to load texture image!");
@@ -464,7 +463,7 @@ void Device::createTextureImage(const std::string_view path) {
 		ImageConfig{
 			.width = static_cast<uint32_t>(texWidth),
 			.height = static_cast<uint32_t>(texHeight),
-			.mipLevels = mipLevels,
+			.mipLevels = 1,
 			.numSamples = vk::SampleCountFlagBits::e1,
 			.format = vk::Format::eR8G8B8A8Srgb,
 			.tiling = vk::ImageTiling::eOptimal,
