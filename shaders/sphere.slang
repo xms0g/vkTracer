@@ -4,30 +4,20 @@ import hitRecord;
 import material;
 import texture;
 
-public struct SphereData {
-    public float4 centerRadius;
-    public float4 center2;
-    public Material mat;
-};
-
 public struct Sphere {
-    private Ray center;
-    private float radius;
-    private Material mat;
-
-    public __init(float3 center1, float3 center2, float radius, Material mat) {
-        float3 activeMask = float3(any(center2 != 0.0));
-        this.center = Ray(center1, (center2 - center1) * activeMask);
-        this.radius = fmax(0, radius);
-        this.mat = mat;
-    }
+    float4 centerRadius;
+    float4 center2;
+    Material mat;
 
     public bool hit(Ray ray, float2 t, inout HitRecord rec) {
+        float3 activeMask = float3(any(center2 != 0.0));
+        Ray center = Ray(centerRadius.xyz, (center2.xyz - centerRadius.xyz) * activeMask);
+        
         float3 currentCenter = center.at(ray.time);
         float3 oc = currentCenter - ray.origin;
         float a = dot(ray.direction, ray.direction);
         float h = dot(ray.direction, oc);
-        float c = dot(oc, oc) - radius * radius;
+        float c = dot(oc, oc) - centerRadius.w * centerRadius.w;
         float discriminant = h * h - a * c;
 
         if (discriminant < 0) {
@@ -49,7 +39,7 @@ public struct Sphere {
         rec.point = ray.at(rec.interval);
         rec.material = mat;
 
-        float3 outwardNormal = (rec.point - currentCenter) / radius;
+        float3 outwardNormal = (rec.point - currentCenter) / centerRadius.w;
         rec.setFaceNormal(ray, outwardNormal);
         rec.uv = Texture::uvFromPoint(outwardNormal);
 

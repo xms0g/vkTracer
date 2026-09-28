@@ -4,23 +4,13 @@ import aabb;
 import ray;
 
 public struct Quad {
- 	public float4 Q;
-	public float4 u;
-	public float4 v;
-	public float4 n;
-	public float3 w;
-	public float D;
-	public Material mat;
-
-    public __init(float4 Q, float4 u, float4 v, float4 n, float3 w, float D, Material mat) {
-        this.Q = Q;
-        this.u = u;
-        this.v = v;
-        this.n = n;
-        this.w = w;
-        this.D = D;
-        this.mat = mat;
-    }
+ 	float4 Q;
+	float4 u;
+	float4 v;
+	float4 n;
+	float3 w;
+	float D;
+	Material mat;
 
     public bool hit(Ray ray, float2 t, inout HitRecord rec) {
         float denom = dot(n.xyz, ray.direction);

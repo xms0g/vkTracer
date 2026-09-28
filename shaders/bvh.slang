@@ -14,10 +14,6 @@ public struct BVHNode {
 	HittableRef left;
 	HittableRef right;
 
-    public AABB boundingBox() {
-        return bounds;
-    }
-
     public bool hit(Ray ray, float2 t, inout HitRecord rec) {
         if (!bounds.hit(ray, t)) {
             return false;
@@ -36,18 +32,16 @@ public struct BVHNode {
             HittableRef current = stack[--stackSize];
 
             if (current.type == HittableType.Sphere) {
-                SphereData* data = (SphereData*)current.address;
-                Sphere s = Sphere(data->centerRadius.xyz, data->center2.xyz, data->centerRadius.w, data->mat);
+                Sphere* s = (Sphere*)current.address;
                 
-                if (s.hit(ray, float2(t.x, closest), rec)) {
+                if (s->hit(ray, float2(t.x, closest), rec)) {
                     hitAnything = true;
                     closest = rec.interval;
                 }
             } else if (current.type == HittableType.Quad) {
-                Quad* data = (Quad*)current.address;
-                Quad q = Quad(data->Q, data->u, data->v, data->n, data->w, data->D, data->mat);
+                Quad* q = (Quad*)current.address;
                 
-                if (q.hit(ray, float2(t.x, closest), rec)) {
+                if (q->hit(ray, float2(t.x, closest), rec)) {
                     hitAnything = true;
                     closest = rec.interval;
                 }
@@ -63,6 +57,5 @@ public struct BVHNode {
         }
 
         return hitAnything;
-
     }
 };
