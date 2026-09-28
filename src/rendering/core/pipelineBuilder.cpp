@@ -175,7 +175,7 @@ GraphicsPipeline::GraphicsPipeline(PipelineBuilder& builder,
                                    vk::SurfaceFormatKHR& surfaceFormat,
                                    DescriptorSetLayout& dscSetLayout,
                                    const uint32_t dscSetLayoutCount,
-                                    const uint32_t pushConstantSize) {
+                                   const uint32_t pushConstantSize) {
 	builder.reset();
 	builder.addVertexShader(shader, "vertMain")
 			.addFragmentShader(shader, "fragMain")

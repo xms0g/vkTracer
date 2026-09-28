@@ -72,7 +72,7 @@ struct Sphere : Hittable {
 		spheres.emplace_back(std::make_shared<Sphere>(
 			glm::vec4(0.0f, -100.5f, 0.0f, 100.5f),
 			glm::vec4(0.0, 0.0, 0.0f, 0.0f), Material{
-				.texture = {.type = TextureType::Checker, .color = glm::vec3(0.8, 0.8, 0.5)},
+				.texture = {.type = TextureType::Noise, .noise = {7.0, 0.5, 2.0, 0.0}},
 				.type = MaterialType::Lambertian
 			}));
 

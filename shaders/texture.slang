@@ -1,4 +1,5 @@
 module texture;
+import perlin;
 
 [[vk::binding(2, 0)]]
 Sampler2D image;
@@ -6,6 +7,7 @@ Sampler2D image;
 public enum TextureType: uint {
 	SolidColor,
     Checker,
+    Noise,
 	Image
 };
 
@@ -14,6 +16,7 @@ static constexpr float PI = 3.1415926535897932385;
 public struct Texture {
 	private TextureType type;
 	private float3 color;
+    private float4 noise;
 
     public float3 sample(float2 uv, float3 p) {
         if (type == TextureType::SolidColor) {
@@ -27,6 +30,10 @@ public struct Texture {
             } else {
                 return float3(0.9, 0.9, 0.9);
             }
+        }
+
+        if (type == TextureType::Noise) {
+            return float3(1.0, 1.0, 1.0) * turbulenceFBM(p, (int)noise.x, noise.y, noise.z);
         }
 
         if (type == TextureType::Image) {
