@@ -3,6 +3,7 @@
 #include "aabb.hpp"
 #include "hittable.hpp"
 
+struct GPUQuad;
 struct GPUSphere;
 
 struct GPUBVHNode {
@@ -26,6 +27,8 @@ struct BVHNode : Hittable {
 
 	static std::vector<GPUBVHNode> flatten(const BVHNode& root,
 	                                       std::vector<GPUSphere>& gpuSpheres,
+	                                       std::vector<GPUQuad>& gpuQuads,
 	                                       uint64_t bvhBaseAddress,
-	                                       uint64_t sphereBaseAddress);
+	                                       uint64_t sphereBaseAddress,
+	                                       uint64_t quadBaseAddress);
 };

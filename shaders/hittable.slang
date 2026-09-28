@@ -2,6 +2,7 @@ module hittable;
 
 public enum HittableType : uint {
     Sphere,
+    Quad,
     BVHNode
 };
 

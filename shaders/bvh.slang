@@ -5,6 +5,7 @@ import hitRecord;
 import random;
 import hittable;
 import sphere;
+import quad;
 
 static const uint MAX_STACK_SIZE = 64;
 
@@ -39,6 +40,14 @@ public struct BVHNode {
                 Sphere s = Sphere(data->centerRadius.xyz, data->center2.xyz, data->centerRadius.w, data->mat);
                 
                 if (s.hit(ray, float2(t.x, closest), rec)) {
+                    hitAnything = true;
+                    closest = rec.interval;
+                }
+            } else if (current.type == HittableType.Quad) {
+                Quad* data = (Quad*)current.address;
+                Quad q = Quad(data->Q, data->u, data->v, data->n, data->w, data->D, data->mat);
+                
+                if (q.hit(ray, float2(t.x, closest), rec)) {
                     hitAnything = true;
                     closest = rec.interval;
                 }

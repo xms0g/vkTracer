@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <random>
 #include "sphere.hpp"
+#include "quad.hpp"
 
 size_t BVHNode::count = 0;
 
@@ -39,10 +40,13 @@ AABB BVHNode::boundingBox() const {
 
 std::vector<GPUBVHNode> BVHNode::flatten(const BVHNode& root,
                                          std::vector<GPUSphere>& gpuSpheres,
+                                         std::vector<GPUQuad>& gpuQuads,
                                          const uint64_t bvhBaseAddress,
-                                         const uint64_t sphereBaseAddress) {
+                                         const uint64_t sphereBaseAddress,
+                                         const uint64_t quadBaseAddress) {
 	std::vector<GPUBVHNode> gpuNodes;
 	std::unordered_map<const Sphere*, uint64_t> sphereAdresses;
+	std::unordered_map<const Quad*, uint64_t> quadAdresses;
 
 	auto getSphereAddress = [&](const Sphere* sphere) -> uint64_t {
 		if (const auto it = sphereAdresses.find(sphere); it != sphereAdresses.end()) {
@@ -54,6 +58,27 @@ std::vector<GPUBVHNode> BVHNode::flatten(const BVHNode& root,
 		sphereAdresses[sphere] = address;
 
 		gpuSpheres.emplace_back(sphere->centerRadius, sphere->center2, sphere->mat);
+
+		return address;
+	};
+
+	auto getQuadAddress = [&](const Quad* quad) -> uint64_t {
+		if (const auto it = quadAdresses.find(quad); it != quadAdresses.end()) {
+			return it->second;
+		}
+
+		const auto index = static_cast<uint32_t>(gpuQuads.size());
+		const uint64_t address = quadBaseAddress + index * sizeof(GPUQuad);
+		quadAdresses[quad] = address;
+
+		gpuQuads.emplace_back(
+			glm::vec4(quad->Q, 0.0),
+			glm::vec4(quad->u, 0.0),
+			glm::vec4(quad->v, 0.0),
+			glm::vec4(quad->normal, 0.0),
+			quad->w,
+			quad->D,
+			quad->mat);
 
 		return address;
 	};
@@ -73,6 +98,11 @@ std::vector<GPUBVHNode> BVHNode::flatten(const BVHNode& root,
 		if (const auto* sphere = dynamic_cast<Sphere*>(obj.get())) {
 			return {.address = getSphereAddress(sphere), .type = SphereType};
 		}
+
+		if (const auto* quad = dynamic_cast<Quad*>(obj.get())) {
+			return {.address = getQuadAddress(quad), .type = QuadType};
+		}
+
 		return {};
 	};
 

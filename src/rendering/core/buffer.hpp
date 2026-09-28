@@ -5,6 +5,8 @@
 
 class Buffer {
 public:
+	Buffer() = default;
+
 	Buffer(vk::DeviceSize size,
 	       const vk::raii::Device& device,
 	       const vk::raii::PhysicalDevice& phyDev,

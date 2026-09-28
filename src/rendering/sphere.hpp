@@ -4,20 +4,7 @@
 #include "hittable.hpp"
 #include "aabb.hpp"
 #include "texture.hpp"
-
-enum class MaterialType: uint32_t {
-	Lambertian = 0,
-	Metal = 1,
-	Dielectric = 2
-};
-
-struct Material {
-	Texture texture;
-	MaterialType type;
-	float fuzz;
-	float refractionIndex;
-	uint32_t pad;
-};
+#include "material.hpp"
 
 struct GPUSphere {
 	glm::vec4 centerRadius;
@@ -33,6 +20,8 @@ struct Sphere : Hittable {
 	Sphere(glm::vec4 centerRadius, glm::vec4 center2, Material mat)
 		: centerRadius(centerRadius), center2(center2), mat(mat) {
 	}
+
+	~Sphere() override = default;
 
 	[[nodiscard]]
 	AABB boundingBox() const override {
@@ -51,27 +40,31 @@ struct Sphere : Hittable {
 
 		spheres.emplace_back(std::make_shared<Sphere>(
 			glm::vec4(0.0, 1.0, 0.0f, 1.0f),
-			glm::vec4(0.0, 0.0, 0.0f, 0.0f), Material{
+			glm::vec4(0.0, 0.0, 0.0f, 0.0f),
+			Material{
 				.type = MaterialType::Dielectric,
 				.refractionIndex = 1.5
 			}));
 		spheres.emplace_back(std::make_shared<Sphere>(
 			glm::vec4(-3.0, 1.0, 0.0, 1.0f),
-			glm::vec4(0.0, 0.0, 0.0f, 0.0f), Material{
+			glm::vec4(0.0, 0.0, 0.0f, 0.0f),
+			Material{
 				.texture = {.type = TextureType::Image},
 				.type = MaterialType::Lambertian
 			}));
 
 		spheres.emplace_back(std::make_shared<Sphere>(
 			glm::vec4(3.0f, 1.0f, 0.0f, 1.0f),
-			glm::vec4(0.0, 0.0, 0.0f, 0.0f), Material{
+			glm::vec4(0.0, 0.0, 0.0f, 0.0f),
+			Material{
 				.texture = {.type = TextureType::SolidColor, .color = glm::vec3(0.7, 0.6, 0.5)},
 				.type = MaterialType::Metal,
 			}));
 
 		spheres.emplace_back(std::make_shared<Sphere>(
 			glm::vec4(0.0f, -100.5f, 0.0f, 100.5f),
-			glm::vec4(0.0, 0.0, 0.0f, 0.0f), Material{
+			glm::vec4(0.0, 0.0, 0.0f, 0.0f),
+			Material{
 				.texture = {.type = TextureType::Noise, .noise = {7.0, 0.5, 2.0, 0.0}},
 				.type = MaterialType::Lambertian
 			}));

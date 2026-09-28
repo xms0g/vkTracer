@@ -2,6 +2,7 @@
 
 enum HittableType : uint32_t {
 	SphereType,
+	QuadType,
 	BVHType
 };
 

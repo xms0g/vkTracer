@@ -22,6 +22,7 @@
 #include "validation.hpp"
 #include "../bvh.hpp"
 #include "../sphere.hpp"
+#include "../quad.hpp"
 #include "../../core/window.hpp"
 #include "../../config/config.hpp"
 #include "../../core/camera.hpp"
@@ -337,77 +338,84 @@ void Device::createDescriptorPool() {
 
 void Device::createShaderStorageBuffers() {
 	std::vector<GPUSphere> gpuSpheres;
+	std::vector<GPUQuad> gpuQuads;
 	auto spheres = Sphere::generateSpheres();
-	const auto bvh = BVHNode(spheres, 0, spheres.size());
+	const auto quads = Quad::generateQuads();
+
+	std::vector<std::shared_ptr<Hittable>> hittables = spheres;
+	hittables.insert(hittables.end(), quads.begin(), quads.end());
+
+	const auto bvh = BVHNode(hittables, 0, hittables.size());
 
 	vk::DeviceSize bvhBufferSize = sizeof(GPUBVHNode) * BVHNode::count;
 	vk::DeviceSize sphereBufferSize = sizeof(GPUSphere) * spheres.size();
+	const vk::DeviceSize quadBufferSize = sizeof(Quad) * quads.size();
 
-	// Create a staging buffer used to upload data to the gpu
-	Buffer sphereStagingBuffer{
-		sphereBufferSize,
-		mDevice,
-		mPhysicalDevice,
-		vk::BufferUsageFlagBits::eTransferSrc,
-		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
-	};
-	Buffer bvhStagingBuffer{
-		bvhBufferSize,
-		mDevice,
-		mPhysicalDevice,
-		vk::BufferUsageFlagBits::eTransferSrc,
-		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
-	};
+	const std::array bufferSizes = {sphereBufferSize, quadBufferSize, bvhBufferSize};
+	std::array<Buffer, 3> stagingBuffers;
+
+	for (uint32_t i = 0; i < stagingBuffers.size(); ++i) {
+		stagingBuffers[i] = Buffer{
+			bufferSizes[i],
+			mDevice,
+			mPhysicalDevice,
+			vk::BufferUsageFlagBits::eTransferSrc,
+			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
+		};
+	}
 
 	mShaderStorageBuffers.clear();
 
 	// Copy initial sphere data to all storage buffers
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
 		gpuSpheres.clear();
+		gpuQuads.clear();
 
-		Buffer spheresSSBO{
-			sphereBufferSize,
-			mDevice,
-			mPhysicalDevice,
-			vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst |
-			vk::BufferUsageFlagBits::eShaderDeviceAddress,
-			vk::MemoryPropertyFlagBits::eDeviceLocal,
-			vk::MemoryAllocateFlagsInfo{.flags = vk::MemoryAllocateFlagBits::eDeviceAddress}
+		for (auto bufferSize : bufferSizes) {
+			mShaderStorageBuffers.emplace_back(
+				bufferSize,
+				mDevice,
+				mPhysicalDevice,
+				vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst |
+				vk::BufferUsageFlagBits::eShaderDeviceAddress,
+				vk::MemoryPropertyFlagBits::eDeviceLocal,
+				vk::MemoryAllocateFlagsInfo{.flags = vk::MemoryAllocateFlagBits::eDeviceAddress});
+		}
+
+		Buffer& spheresSSBO = mShaderStorageBuffers[0];
+		Buffer& quadSSBO = mShaderStorageBuffers[1];
+		Buffer& bvhSSBO = mShaderStorageBuffers[2];
+
+		auto getBufferAddress = [&](Buffer& buffer) -> uint64_t {
+			const vk::BufferDeviceAddressInfo info{
+				.buffer = **buffer
+			};
+
+			return mDevice.getBufferAddress(info);
 		};
 
-		Buffer bvhSSBO{
-			bvhBufferSize,
-			mDevice,
-			mPhysicalDevice,
-			vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst |
-			vk::BufferUsageFlagBits::eShaderDeviceAddress,
-			vk::MemoryPropertyFlagBits::eDeviceLocal,
-			vk::MemoryAllocateFlagsInfo{.flags = vk::MemoryAllocateFlagBits::eDeviceAddress}
+		const uint64_t sphereAddress = getBufferAddress(spheresSSBO);
+		uint64_t quadAddress = getBufferAddress(quadSSBO);
+		uint64_t bvhAddress = getBufferAddress(bvhSSBO);
+
+		const auto gpuBVH = BVHNode::flatten(bvh, gpuSpheres, gpuQuads, bvhAddress, sphereAddress, quadAddress);
+
+		Buffer& sphereStagingBuffer = stagingBuffers[0];
+		Buffer& quadStagingBuffer = stagingBuffers[1];
+		Buffer& bvhStagingBuffer = stagingBuffers[2];
+
+		auto copyDataToBuffer = [&](const void* data, Buffer& stagingBuffer, const Buffer& ssbo, const size_t bufferSize) {
+			void* mem = stagingBuffer.map(bufferSize);
+			memcpy(mem, data, bufferSize);
+			stagingBuffer.unmap();
+
+			copyBuffer(stagingBuffer, ssbo, bufferSize);
+
 		};
 
-		vk::BufferDeviceAddressInfo info{
-			.buffer = **spheresSSBO
-		};
-		uint64_t sphereAddress = mDevice.getBufferAddress(info);
-		info.buffer = **bvhSSBO;
-		uint64_t bvhAddress = mDevice.getBufferAddress(info);
-
-		const auto gpuBVH = BVHNode::flatten(bvh, gpuSpheres, bvhAddress, sphereAddress);
-
-		void* mem = sphereStagingBuffer.map(sphereBufferSize);
-		memcpy(mem, gpuSpheres.data(), sphereBufferSize);
-		sphereStagingBuffer.unmap();
-
-		copyBuffer(sphereStagingBuffer, spheresSSBO, sphereBufferSize);
-
-		mem = bvhStagingBuffer.map(bvhBufferSize);
-		memcpy(mem, gpuBVH.data(), bvhBufferSize);
-		bvhStagingBuffer.unmap();
-
-		copyBuffer(bvhStagingBuffer, bvhSSBO, bvhBufferSize);
-
-		mShaderStorageBuffers.emplace_back(std::move(spheresSSBO));
-		mShaderStorageBuffers.emplace_back(std::move(bvhSSBO));
+		copyDataToBuffer(gpuSpheres.data(), sphereStagingBuffer, spheresSSBO, sphereBufferSize);
+		copyDataToBuffer(gpuQuads.data(), quadStagingBuffer, quadSSBO, quadBufferSize);
+		copyDataToBuffer(gpuBVH.data(), bvhStagingBuffer, bvhSSBO, bvhBufferSize);
 
 		mShaderStorageBufferAddresses.push_back(bvhAddress);
 	}
@@ -471,7 +479,8 @@ void Device::createTextureImage(const std::string_view path) {
 			.properties = vk::MemoryPropertyFlagBits::eDeviceLocal
 		});
 
-	copyBufferToImage(stagingBuffer, mTextureImages.back(), static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+	copyBufferToImage(stagingBuffer, mTextureImages.back(), static_cast<uint32_t>(texWidth),
+	                  static_cast<uint32_t>(texHeight));
 }
 
 void Device::createSamplers() {
