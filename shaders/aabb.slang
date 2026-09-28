@@ -12,12 +12,14 @@ public struct AABB {
         this.x = x;
         this.y = y;
         this.z = z;
+        padToMin();
     }
 
     public __init(float3 a, float3 b) {
-        x = a.x < b.x ? float2(a.x, b.x) : float2(b.x, a.x);
-        y = a.y < b.y ? float2(a.y, b.y) : float2(b.y, a.y);
-        z = a.z < b.z ? float2(a.z, b.z) : float2(b.z, a.z);
+        x = float2(fmin(a.x, b.x), fmax(a.x, b.x));
+        y = float2(fmin(a.y, b.y), fmax(a.y, b.y));
+        z = float2(fmin(a.z, b.z), fmax(a.z, b.z));
+        padToMin();
     }
 
     public __init(AABB a, AABB b) {
@@ -57,4 +59,16 @@ public struct AABB {
         }
 		return true;
     }
+
+    [mutating]
+    void padToMin() {
+		constexpr float delta = 0.0001;
+		const float xSize = x.y - x.x;
+		const float ySize = y.y - y.x;
+		const float zSize = z.y - z.x;
+
+		x = xSize < delta ? float2(x.x - delta/2, x.y + delta/2) : x;
+		y = ySize < delta ? float2(y.x - delta/2, y.y + delta/2) : y;
+		z = zSize < delta ? float2(z.x - delta/2, z.y + delta/2) : z;
+	}
 };
