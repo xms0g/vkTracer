@@ -72,3 +72,11 @@ public bool scatter(Ray ray,
 
     return false;
 }
+
+public float3 emitted(HitRecord rec) {
+    if (rec.material.type == MaterialType::DiffuseLight) {
+        return rec.material.texture.sample(rec.uv, rec.point);
+    }
+
+    return float3(0.0);
+}

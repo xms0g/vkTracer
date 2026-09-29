@@ -25,12 +25,12 @@ struct Quad : Hittable {
 	float D;
 	Material mat;
 
-	Quad(const glm::vec3 Q, const glm::vec3 u, const glm::vec3 v, const Material& mat)
+	Quad(const glm::vec3& Q, const glm::vec3& u, const glm::vec3& v, const Material& mat)
 		: Q(Q), u(u), v(v), mat(mat) {
-		const glm::vec3 n = cross(u, v);
-		w = n / dot(n, n);
-		normal = normalize(n);
-		D = dot(normal, Q);
+		const glm::vec3 n = glm::cross(u, v);
+		w = n / glm::dot(n, n);
+		normal = glm::normalize(n);
+		D = glm::dot(normal, Q);
 	}
 
 	~Quad() override = default;
@@ -46,12 +46,12 @@ struct Quad : Hittable {
 		std::vector<std::shared_ptr<Hittable> > quads;
 
 		quads.emplace_back(std::make_shared<Quad>(
-			glm::vec3(0, 3, 0),
-			glm::vec3(0, 0, -4),
-			glm::vec3(0, 4, 0),
+			glm::vec3(3, 1, -2),
+			glm::vec3(2, 0, 2),
+			glm::vec3(0, 2, 0),
 			Material{
-				.texture = {.type = TextureType::SolidColor, .color = glm::vec3(1.0, 0.2, 0.2)},
-				.type = MaterialType::Lambertian
+				.texture = {.type = TextureType::SolidColor, .color = glm::vec3(4, 4, 4)},
+				.type = MaterialType::DiffuseLight
 			}));
 
 		return quads;

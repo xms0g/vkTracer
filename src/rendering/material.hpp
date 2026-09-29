@@ -2,8 +2,9 @@
 
 enum class MaterialType: uint32_t {
 	Lambertian = 0,
-	Metal = 1,
-	Dielectric = 2
+	Metal,
+	Dielectric,
+	DiffuseLight,
 };
 
 struct Material {

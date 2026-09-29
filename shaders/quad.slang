@@ -18,7 +18,7 @@ public struct Quad {
             return false;
         }
 
-        float tHit = D - dot(n.xyz, ray.origin) / denom;
+        float tHit = (D - dot(n.xyz, ray.origin)) / denom;
         if (tHit < t.x || tHit > t.y) {
             return false;
         }

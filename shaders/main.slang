@@ -63,32 +63,36 @@ static constexpr float FOCUS_DIST = 1.0;
 static constexpr float VFOV = 90.0;
 static constexpr int SAMPLES_PER_PIXEL = 20;
 static constexpr float PIXEL_SAMPLES_SCALE = 1.0 / SAMPLES_PER_PIXEL;
+static constexpr float3 BGCOLOR = float3(0.0, 0.0, 0.0);
 
 float3 rayColor(Ray ray, int depth, Scene scene, inout Random rand) {
     Ray r = ray;
-    float3 attenuation = float3(1.0);
+    float3 throughput = float3(1.0);
+    float3 radiance = float3(0.0);
 
     for (uint bounce = 0; bounce < depth; ++bounce) {
         HitRecord rec;
 
-        if (scene.hit(r, float2(0.001, FLT_MAX), rec)) {
-            Ray scattered;
-            float3 matAtten;
-
-            if (scatter(r, rec, matAtten, scattered, rand)) {
-                attenuation *= matAtten;
-                r = scattered;
-            } else {
-                return float3(0.0);
-            }
-        } else {
-            float3 unitDir = normalize(r.direction);
-            float a = 0.5 * (unitDir.y + 1.0);
-            return attenuation * lerp(float3(1.0, 1.0, 1.0), float3(0.5, 0.7, 1.0), a);
+        if (!scene.hit(r, float2(0.001, FLT_MAX), rec)) {
+            radiance += throughput * BGCOLOR;
+            return radiance;
         }
+
+        Ray scattered;
+        float3 matAtten;
+        float3 emission = emitted(rec);
+
+        radiance += throughput * emission;
+
+        if (!scatter(r, rec, matAtten, scattered, rand)) {
+            return radiance;
+        }
+        
+        throughput *= matAtten;
+        r = scattered; 
     }
 
-    return float3(0.0);
+    return radiance;
 }
 
 [shader("compute")]

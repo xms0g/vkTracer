@@ -5,7 +5,8 @@ import texture;
 public enum MaterialType: uint {
 	Lambertian,
 	Metal,
-	Dielectric
+	Dielectric,
+    DiffuseLight
 };
 
 public struct Material {
