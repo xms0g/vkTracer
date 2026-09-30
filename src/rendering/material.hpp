@@ -1,4 +1,5 @@
 #pragma once
+#include "texture.hpp"
 
 enum class MaterialType: uint32_t {
 	Lambertian = 0,

@@ -42,18 +42,23 @@ struct Quad : Hittable {
 		return {diagonal1, diagonal2};
 	}
 
-	static std::vector<std::shared_ptr<Hittable> > generateQuads() {
-		std::vector<std::shared_ptr<Hittable> > quads;
+	static std::vector<std::shared_ptr<Hittable> > box(const glm::vec3& a, const glm::vec3& b, Material mat) {
+		std::vector<std::shared_ptr<Hittable> > sides;
 
-		quads.emplace_back(std::make_shared<Quad>(
-			glm::vec3(3, 1, -2),
-			glm::vec3(2, 0, 2),
-			glm::vec3(0, 2, 0),
-			Material{
-				.texture = {.type = TextureType::SolidColor, .color = glm::vec3(4, 4, 4)},
-				.type = MaterialType::DiffuseLight
-			}));
+		auto min = glm::vec3(std::fmin(a.x,b.x), std::fmin(a.y,b.y), std::fmin(a.z,b.z));
+		auto max = glm::vec3(std::fmax(a.x,b.x), std::fmax(a.y,b.y), std::fmax(a.z,b.z));
 
-		return quads;
+		auto dx = glm::vec3(max.x - min.x, 0, 0);
+		auto dy = glm::vec3(0, max.y - min.y, 0);
+		auto dz = glm::vec3(0, 0, max.z - min.z);
+
+		sides.emplace_back(std::make_shared<Quad>(glm::vec3(min.x, min.y, max.z),  dx,  dy, mat)); // front
+		sides.emplace_back(std::make_shared<Quad>(glm::vec3(max.x, min.y, max.z), -dz,  dy, mat)); // right
+		sides.emplace_back(std::make_shared<Quad>(glm::vec3(max.x, min.y, min.z), -dx,  dy, mat)); // back
+		sides.emplace_back(std::make_shared<Quad>(glm::vec3(min.x, min.y, min.z),  dz,  dy, mat)); // left
+		sides.emplace_back(std::make_shared<Quad>(glm::vec3(min.x, max.y, max.z),  dx, -dz, mat)); // top
+		sides.emplace_back(std::make_shared<Quad>(glm::vec3(min.x, min.y, min.z),  dx,  dz, mat)); // bottom
+
+		return sides;
 	}
 };

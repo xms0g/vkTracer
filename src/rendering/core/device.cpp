@@ -23,6 +23,7 @@
 #include "../bvh.hpp"
 #include "../sphere.hpp"
 #include "../quad.hpp"
+#include "../scene.hpp"
 #include "../../core/window.hpp"
 #include "../../config/config.hpp"
 #include "../../core/camera.hpp"
@@ -339,20 +340,14 @@ void Device::createDescriptorPool() {
 void Device::createShaderStorageBuffers() {
 	std::vector<GPUSphere> gpuSpheres;
 	std::vector<GPUQuad> gpuQuads;
-	auto spheres = Sphere::generateSpheres();
-	const auto quads = Quad::generateQuads();
 
-	std::vector<std::shared_ptr<Hittable>> hittables = spheres;
-	hittables.insert(hittables.end(), quads.begin(), quads.end());
-
-	const auto bvh = BVHNode(hittables, 0, hittables.size());
-
-	vk::DeviceSize bvhBufferSize = sizeof(GPUBVHNode) * BVHNode::count;
-	vk::DeviceSize sphereBufferSize = sizeof(GPUSphere) * spheres.size();
-	const vk::DeviceSize quadBufferSize = sizeof(Quad) * quads.size();
+	const auto& [bvh, sphereCount, quadCount, bvhNodeCount] = Scene::buildScene();
+	const vk::DeviceSize bvhBufferSize = sizeof(GPUBVHNode) * bvhNodeCount;
+	const vk::DeviceSize sphereBufferSize = sizeof(GPUSphere) * sphereCount;
+	const vk::DeviceSize quadBufferSize = sizeof(GPUQuad) * quadCount;
 
 	const std::array bufferSizes = {sphereBufferSize, quadBufferSize, bvhBufferSize};
-	std::array<Buffer, 3> stagingBuffers;
+	std::array<Buffer, bufferSizes.size()> stagingBuffers;
 
 	for (uint32_t i = 0; i < stagingBuffers.size(); ++i) {
 		stagingBuffers[i] = Buffer{
@@ -371,7 +366,7 @@ void Device::createShaderStorageBuffers() {
 		gpuSpheres.clear();
 		gpuQuads.clear();
 
-		for (auto bufferSize : bufferSizes) {
+		for (auto bufferSize: bufferSizes) {
 			mShaderStorageBuffers.emplace_back(
 				bufferSize,
 				mDevice,
@@ -398,19 +393,21 @@ void Device::createShaderStorageBuffers() {
 		uint64_t quadAddress = getBufferAddress(quadSSBO);
 		uint64_t bvhAddress = getBufferAddress(bvhSSBO);
 
-		const auto gpuBVH = BVHNode::flatten(bvh, gpuSpheres, gpuQuads, bvhAddress, sphereAddress, quadAddress);
+		const auto gpuBVH = BVHNode::flatten(*bvh, gpuSpheres, gpuQuads, bvhAddress, sphereAddress, quadAddress);
 
 		Buffer& sphereStagingBuffer = stagingBuffers[0];
 		Buffer& quadStagingBuffer = stagingBuffers[1];
 		Buffer& bvhStagingBuffer = stagingBuffers[2];
 
-		auto copyDataToBuffer = [&](const void* data, Buffer& stagingBuffer, const Buffer& ssbo, const size_t bufferSize) {
+		auto copyDataToBuffer = [&](const void* data,
+		                            Buffer& stagingBuffer,
+		                            const Buffer& ssbo,
+		                            const size_t bufferSize) {
 			void* mem = stagingBuffer.map(bufferSize);
 			memcpy(mem, data, bufferSize);
 			stagingBuffer.unmap();
 
 			copyBuffer(stagingBuffer, ssbo, bufferSize);
-
 		};
 
 		copyDataToBuffer(gpuSpheres.data(), sphereStagingBuffer, spheresSSBO, sphereBufferSize);
