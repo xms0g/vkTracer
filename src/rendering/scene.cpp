@@ -1,4 +1,7 @@
 #include "scene.hpp"
+#include "quad.hpp"
+#include "sphere.hpp"
+#include "bvh.hpp"
 
 SceneData Scene::buildScene() {
 	std::vector<std::shared_ptr<Hittable>> spheres;

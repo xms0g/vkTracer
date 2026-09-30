@@ -1,8 +1,7 @@
 #pragma once
 #include <memory>
-#include "quad.hpp"
-#include "sphere.hpp"
-#include "bvh.hpp"
+
+struct BVHNode;
 
 struct SceneData {
 	std::shared_ptr<BVHNode> bvh;
