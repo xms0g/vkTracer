@@ -390,8 +390,8 @@ void Device::createShaderStorageBuffers() {
 		};
 
 		const uint64_t sphereAddress = getBufferAddress(spheresSSBO);
-		uint64_t quadAddress = getBufferAddress(quadSSBO);
-		uint64_t bvhAddress = getBufferAddress(bvhSSBO);
+		const uint64_t quadAddress = getBufferAddress(quadSSBO);
+		const uint64_t bvhAddress = getBufferAddress(bvhSSBO);
 
 		const auto gpuBVH = BVHNode::flatten(*bvh, gpuSpheres, gpuQuads, bvhAddress, sphereAddress, quadAddress);
 
