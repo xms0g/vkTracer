@@ -86,22 +86,23 @@ SceneData Scene::buildScene() {
 	// 		.type = MaterialType::Lambertian
 	// 	}));
 
-	// const auto box = Quad::box(
-	// 	glm::vec3(-1.5f, -1.5f, -5.0f),
-	// 	glm::vec3(1.5f, 1.5f, -2.0f),
-	// 	Material{
-	// 		.texture = {.type = TextureType::SolidColor, .color = glm::vec3(0.73, 0.73, 0.73)},
-	// 		.type = MaterialType::Lambertian
-	// 	});
+	const auto box = Quad::box(
+		glm::vec3(0.0f, -1.5f, -5.0f),
+		glm::vec3(1.0f, 0.5f, -4.0f),
+		0.0f,
+		Material{
+			.texture = {.type = TextureType::SolidColor, .color = glm::vec3(0.73, 0.73, 0.73)},
+			.type = MaterialType::Lambertian
+		});
 
 	std::vector<std::shared_ptr<Hittable> > hittables = spheres;
 	hittables.insert(hittables.end(), cornellBox.begin(), cornellBox.end());
-	//hittables.insert(hittables.end(), box.begin(), box.end());
+	hittables.insert(hittables.end(), box.begin(), box.end());
 
 	return {
 		.bvh = std::make_shared<BVHNode>(hittables, 0, hittables.size()),
 		.sphereCount = spheres.size(),
-		.quadCount = cornellBox.size(), //+ box.size(),
+		.quadCount = cornellBox.size() + box.size(),
 		.bvhNodeCount = BVHNode::count,
 	};
 }
