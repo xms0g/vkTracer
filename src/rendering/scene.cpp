@@ -7,7 +7,7 @@
 SceneData Scene::buildScene() {
 	std::vector<std::shared_ptr<Hittable> > cornellBox;
 	std::vector<std::shared_ptr<Hittable> > spheres;
-	std::vector<std::shared_ptr<Hittable>> volumes;
+	std::vector<std::shared_ptr<Hittable> > volumes;
 
 	// Right
 	cornellBox.emplace_back(std::make_shared<Quad>(
@@ -82,13 +82,14 @@ SceneData Scene::buildScene() {
 			.type = MaterialType::Metal,
 		}));
 
-	// spheres.emplace_back(std::make_shared<Sphere>(
-	// 	glm::vec4(0.0f, -100.5f, 0.0f, 100.5f),
-	// 	glm::vec4(0.0, 0.0, 0.0f, 0.0f),
-	// 	Material{
-	// 		.texture = {.type = TextureType::Noise, .noise = {7.0, 0.5, 2.0, 0.0}},
-	// 		.type = MaterialType::Lambertian
-	// 	}));
+	spheres.emplace_back(std::make_shared<Sphere>(
+		glm::vec3(0.0, -1.0, -4.0),
+		glm::vec3(0.0, 0.0, 0.0f),
+		0.5f,
+		Material{
+			.type = MaterialType::Dielectric,
+			.refractionIndex = 1.5f
+		}));
 
 	// const auto box = Quad::box(
 	// 	glm::vec3(0.0f, -1.5f, -5.0f),
@@ -103,9 +104,9 @@ SceneData Scene::buildScene() {
 		spheres[0],
 		1.0f,
 		Material{
-		.texture = {.type = TextureType::SolidColor, .color = glm::vec3(0.0, 0.0, 0.0)},
-		.type = MaterialType::Isotropic
-	}));
+			.texture = {.type = TextureType::SolidColor, .color = glm::vec3(0.0, 0.0, 0.0)},
+			.type = MaterialType::Isotropic
+		}));
 
 	std::vector<std::shared_ptr<Hittable> > hittables = spheres;
 	hittables.insert(hittables.end(), cornellBox.begin(), cornellBox.end());
