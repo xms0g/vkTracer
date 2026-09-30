@@ -7,7 +7,9 @@ Ray generation, intersection tests, material scattering, and pixel sampling are 
 ![Graphics](https://img.shields.io/badge/API-Vulkan-ac162c)
 ![License](https://img.shields.io/badge/License-BSD%203--Clause-green)
 ![Demo](assets/demo.gif)
-![Screenshot](assets/screenshot.png)
+![Checker](assets/checker.png)
+![Cornell](assets/cornell.png)
+
 ## Features
 - Sphere intersection
 - Lambertian, metallic, and dielectric materials
