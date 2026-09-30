@@ -65,16 +65,18 @@ SceneData Scene::buildScene() {
 		}));
 
 	spheres.emplace_back(std::make_shared<Sphere>(
-		glm::vec4(0.8, -1.0, -3.0, 0.5f),
-		glm::vec4(0.0, 0.0, 0.0f, 0.0f),
+		glm::vec3(0.8, -1.0, -3.0),
+		glm::vec3(0.0, 0.0, 0.0f),
+		0.5f,
 		Material{
 			.texture = {.type = TextureType::Noise, .noise = {7.0, 0.5, 2.0, 0.0}},
 			.type = MaterialType::Lambertian
 		}));
 
 	spheres.emplace_back(std::make_shared<Sphere>(
-		glm::vec4(-0.8, -1.0, -3.0, 0.5f),
-		glm::vec4(0.0, 0.0, 0.0f, 0.0f),
+		glm::vec3(-0.8, -1.0, -3.0),
+		glm::vec3(0.0, 0.0, 0.0f),
+		0.5f,
 		Material{
 			.texture = {.type = TextureType::SolidColor, .color = glm::vec3(0.7, 0.6, 0.5)},
 			.type = MaterialType::Metal,

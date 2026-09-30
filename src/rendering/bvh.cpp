@@ -63,7 +63,10 @@ std::vector<GPUBVHNode> BVHNode::flatten(const BVHNode& root,
 		const uint64_t address = sphereBaseAddress + index * sizeof(GPUSphere);
 		sphereAdresses[sphere] = address;
 
-		gpuSpheres.emplace_back(sphere->centerRadius, sphere->center2, sphere->mat);
+		gpuSpheres.emplace_back(
+			glm::vec4(sphere->center, sphere->radius),
+			glm::vec4(sphere->center2, 0.0f),
+			sphere->mat);
 
 		return address;
 	};

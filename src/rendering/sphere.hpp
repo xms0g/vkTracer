@@ -11,21 +11,19 @@ struct GPUSphere {
 };
 
 struct Sphere : Hittable {
-	glm::vec4 centerRadius;
-	glm::vec4 center2;
+	glm::vec3 center;
+	float radius;
+	glm::vec3 center2;
 	Material mat;
 
-	Sphere(const glm::vec4 centerRadius, const glm::vec4 center2, const Material& mat)
-		: centerRadius(centerRadius), center2(center2), mat(mat) {
+	Sphere(const glm::vec3 center, const glm::vec3 center2, const float radius, const Material& mat)
+		: center(glm::vec3(center)), radius(radius), center2(center2), mat(mat) {
 	}
 
 	~Sphere() override = default;
 
 	[[nodiscard]]
 	AABB boundingBox() const override {
-		const auto center = glm::vec3(centerRadius);
-		const float radius = centerRadius.w;
-
 		return AABB{
 			glm::vec2(center.x - radius, center.x + radius),
 			glm::vec2(center.y - radius, center.y + radius),
