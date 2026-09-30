@@ -73,7 +73,7 @@ float3 rayColor(Ray ray, int depth, Scene scene, inout Random rand) {
     for (uint bounce = 0; bounce < depth; ++bounce) {
         HitRecord rec;
 
-        if (!scene.hit(r, float2(0.001, FLT_MAX), rec)) {
+        if (!scene.hit(r, float2(0.001, FLT_MAX), rec, rand)) {
             radiance += throughput * BGCOLOR;
             return radiance;
         }

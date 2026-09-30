@@ -3,13 +3,14 @@ import ray;
 import hitRecord;
 import material;
 import texture;
+import random;
 
 public struct Sphere {
     float4 centerRadius;
     float4 center2;
     Material mat;
 
-    public bool hit(Ray ray, float2 t, inout HitRecord rec) {
+    public bool hit(Ray ray, float2 t, inout HitRecord rec, inout Random rand) {
         float3 activeMask = float3(any(center2 != 0.0));
         Ray center = Ray(centerRadius.xyz, (center2.xyz - centerRadius.xyz) * activeMask);
         

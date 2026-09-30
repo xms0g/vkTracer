@@ -6,7 +6,8 @@ public enum MaterialType: uint {
 	Lambertian,
 	Metal,
 	Dielectric,
-    DiffuseLight
+    DiffuseLight,
+    Isotropic
 };
 
 public struct Material {

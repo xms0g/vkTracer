@@ -53,6 +53,14 @@ namespace Dielectric {
     }
 }
 
+namespace Isotropic {
+    bool scatter(Ray in, HitRecord rec, inout float3 attenuation, inout Ray scattered, inout Random rand) {
+        scattered = {rec.point, rand.randomUnitVector(), in.time};
+        attenuation = rec.material.texture.sample(rec.uv, rec.point);
+        return true;
+    }
+}
+
 public bool scatter(Ray ray,
                     HitRecord rec,
                     inout float3 attenuation,
@@ -68,6 +76,10 @@ public bool scatter(Ray ray,
 
     if (rec.material.type == MaterialType::Dielectric) {
         return Dielectric::scatter(ray, rec, attenuation, scattered, rand);
+    }
+
+    if (rec.material.type == MaterialType::Isotropic) {
+        return Isotropic::scatter(ray, rec, attenuation, scattered, rand);
     }
 
     return false;

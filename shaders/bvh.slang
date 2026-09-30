@@ -6,6 +6,7 @@ import random;
 import hittable;
 import sphere;
 import quad;
+import volume;
 
 static const uint MAX_STACK_SIZE = 64;
 
@@ -14,7 +15,7 @@ public struct BVHNode {
 	HittableRef left;
 	HittableRef right;
 
-    public bool hit(Ray ray, float2 t, inout HitRecord rec) {
+    public bool hit(Ray ray, float2 t, inout HitRecord rec, inout Random rand) {
         if (!bounds.hit(ray, t)) {
             return false;
         }
@@ -34,14 +35,21 @@ public struct BVHNode {
             if (current.type == HittableType.Sphere) {
                 Sphere* s = (Sphere*)current.address;
                 
-                if (s->hit(ray, float2(t.x, closest), rec)) {
+                if (s->hit(ray, float2(t.x, closest), rec, rand)) {
                     hitAnything = true;
                     closest = rec.interval;
                 }
             } else if (current.type == HittableType.Quad) {
                 Quad* q = (Quad*)current.address;
                 
-                if (q->hit(ray, float2(t.x, closest), rec)) {
+                if (q->hit(ray, float2(t.x, closest), rec, rand)) {
+                    hitAnything = true;
+                    closest = rec.interval;
+                }
+            } else if (current.type == HittableType::Volume) {
+                Volume* v = (Volume*)current.address;
+
+                if (v->hit(ray, float2(t.x, closest), rec, rand)) {
                     hitAnything = true;
                     closest = rec.interval;
                 }

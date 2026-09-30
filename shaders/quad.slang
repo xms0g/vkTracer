@@ -2,6 +2,7 @@ module quad;
 import hitRecord;
 import aabb;
 import ray;
+import random;
 
 public struct Quad {
  	float4 Q;
@@ -12,7 +13,7 @@ public struct Quad {
 	float D;
 	Material mat;
 
-    public bool hit(Ray ray, float2 t, inout HitRecord rec) {
+    public bool hit(Ray ray, float2 t, inout HitRecord rec, inout Random rand) {
         float denom = dot(n.xyz, ray.direction);
         if (abs(denom) < 1e-8) {
             return false;
