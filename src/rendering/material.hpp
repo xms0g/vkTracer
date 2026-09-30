@@ -6,6 +6,7 @@ enum class MaterialType: uint32_t {
 	Metal,
 	Dielectric,
 	DiffuseLight,
+	Isotropic
 };
 
 struct Material {

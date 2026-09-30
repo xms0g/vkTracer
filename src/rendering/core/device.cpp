@@ -24,6 +24,7 @@
 #include "../sphere.hpp"
 #include "../quad.hpp"
 #include "../scene.hpp"
+#include "../volume.hpp"
 #include "../../core/window.hpp"
 #include "../../config/config.hpp"
 #include "../../core/camera.hpp"
@@ -340,13 +341,15 @@ void Device::createDescriptorPool() {
 void Device::createShaderStorageBuffers() {
 	std::vector<GPUSphere> gpuSpheres;
 	std::vector<GPUQuad> gpuQuads;
+	std::vector<GPUVolume> gpuVolumes;
 
-	const auto& [bvh, sphereCount, quadCount, bvhNodeCount] = Scene::buildScene();
+	const auto& [bvh, sphereCount, quadCount, volumeCount, bvhNodeCount] = Scene::buildScene();
 	const vk::DeviceSize bvhBufferSize = sizeof(GPUBVHNode) * bvhNodeCount;
 	const vk::DeviceSize sphereBufferSize = sizeof(GPUSphere) * sphereCount;
 	const vk::DeviceSize quadBufferSize = sizeof(GPUQuad) * quadCount;
+	const vk::DeviceSize volumeBufferSize = sizeof(GPUVolume) * volumeCount;
 
-	const std::array bufferSizes = {sphereBufferSize, quadBufferSize, bvhBufferSize};
+	const std::array bufferSizes = {sphereBufferSize, quadBufferSize, volumeBufferSize, bvhBufferSize};
 	std::array<Buffer, bufferSizes.size()> stagingBuffers;
 
 	for (uint32_t i = 0; i < stagingBuffers.size(); ++i) {
@@ -365,6 +368,7 @@ void Device::createShaderStorageBuffers() {
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
 		gpuSpheres.clear();
 		gpuQuads.clear();
+		gpuVolumes.clear();
 
 		for (auto bufferSize: bufferSizes) {
 			mShaderStorageBuffers.emplace_back(
@@ -379,7 +383,8 @@ void Device::createShaderStorageBuffers() {
 
 		Buffer& spheresSSBO = mShaderStorageBuffers[0];
 		Buffer& quadSSBO = mShaderStorageBuffers[1];
-		Buffer& bvhSSBO = mShaderStorageBuffers[2];
+		Buffer& volumeSSBO = mShaderStorageBuffers[2];
+		Buffer& bvhSSBO = mShaderStorageBuffers[3];
 
 		auto getBufferAddress = [&](Buffer& buffer) -> uint64_t {
 			const vk::BufferDeviceAddressInfo info{
@@ -391,13 +396,23 @@ void Device::createShaderStorageBuffers() {
 
 		const uint64_t sphereAddress = getBufferAddress(spheresSSBO);
 		const uint64_t quadAddress = getBufferAddress(quadSSBO);
+		const uint64_t volumeAddress = getBufferAddress(volumeSSBO);
 		const uint64_t bvhAddress = getBufferAddress(bvhSSBO);
 
-		const auto gpuBVH = BVHNode::flatten(*bvh, gpuSpheres, gpuQuads, bvhAddress, sphereAddress, quadAddress);
+		const auto gpuBVH = BVHNode::flatten(
+			*bvh,
+			gpuSpheres,
+			gpuQuads,
+			gpuVolumes,
+			bvhAddress,
+			sphereAddress,
+			quadAddress,
+			volumeAddress);
 
 		Buffer& sphereStagingBuffer = stagingBuffers[0];
 		Buffer& quadStagingBuffer = stagingBuffers[1];
-		Buffer& bvhStagingBuffer = stagingBuffers[2];
+		Buffer& volumeStagingBuffer = stagingBuffers[2];
+		Buffer& bvhStagingBuffer = stagingBuffers[3];
 
 		auto copyDataToBuffer = [&](const void* data,
 		                            Buffer& stagingBuffer,
@@ -412,6 +427,7 @@ void Device::createShaderStorageBuffers() {
 
 		copyDataToBuffer(gpuSpheres.data(), sphereStagingBuffer, spheresSSBO, sphereBufferSize);
 		copyDataToBuffer(gpuQuads.data(), quadStagingBuffer, quadSSBO, quadBufferSize);
+		copyDataToBuffer(gpuVolumes.data(), volumeStagingBuffer, volumeSSBO, volumeBufferSize);
 		copyDataToBuffer(gpuBVH.data(), bvhStagingBuffer, bvhSSBO, bvhBufferSize);
 
 		mShaderStorageBufferAddresses.push_back(bvhAddress);

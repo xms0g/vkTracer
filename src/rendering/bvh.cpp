@@ -4,6 +4,7 @@
 #include <random>
 #include "sphere.hpp"
 #include "quad.hpp"
+#include "volume.hpp"
 
 size_t BVHNode::count = 0;
 
@@ -41,12 +42,17 @@ AABB BVHNode::boundingBox() const {
 std::vector<GPUBVHNode> BVHNode::flatten(const BVHNode& root,
                                          std::vector<GPUSphere>& gpuSpheres,
                                          std::vector<GPUQuad>& gpuQuads,
+                                         std::vector<GPUVolume>& gpuVolumes,
                                          const uint64_t bvhBaseAddress,
                                          const uint64_t sphereBaseAddress,
-                                         const uint64_t quadBaseAddress) {
+                                         const uint64_t quadBaseAddress,
+                                         const uint64_t volumeBaseAddress) {
 	std::vector<GPUBVHNode> gpuNodes;
 	std::unordered_map<const Sphere*, uint64_t> sphereAdresses;
 	std::unordered_map<const Quad*, uint64_t> quadAdresses;
+	std::unordered_map<const Volume*, uint64_t> volumeAdresses;
+	std::function<uint32_t(const BVHNode&)> visit;
+	std::function<HittableRef(const std::shared_ptr<Hittable>&)> makeRef;
 
 	auto getSphereAddress = [&](const Sphere* sphere) -> uint64_t {
 		if (const auto it = sphereAdresses.find(sphere); it != sphereAdresses.end()) {
@@ -83,9 +89,21 @@ std::vector<GPUBVHNode> BVHNode::flatten(const BVHNode& root,
 		return address;
 	};
 
-	std::function<uint32_t(const BVHNode&)> visit;
+	auto getVolumeAddress = [&](const Volume* volume) -> uint64_t {
+		if (const auto it = volumeAdresses.find(volume); it != volumeAdresses.end()) {
+			return it->second;
+		}
 
-	auto makeRef = [&](const std::shared_ptr<Hittable>& obj) -> HittableRef {
+		const auto index = static_cast<uint32_t>(gpuVolumes.size());
+		const uint64_t address = volumeBaseAddress + index * sizeof(GPUVolume);
+		volumeAdresses[volume] = address;
+
+		gpuVolumes.emplace_back(glm::vec4(volume->negInvDensity), volume->mat, makeRef(volume->boundary));
+
+		return address;
+	};
+
+	makeRef = [&](const std::shared_ptr<Hittable>& obj) -> HittableRef {
 		if (const auto* bvh = dynamic_cast<BVHNode*>(obj.get())) {
 			const uint32_t index = visit(*bvh);
 
@@ -101,6 +119,10 @@ std::vector<GPUBVHNode> BVHNode::flatten(const BVHNode& root,
 
 		if (const auto* quad = dynamic_cast<Quad*>(obj.get())) {
 			return {.address = getQuadAddress(quad), .type = QuadType};
+		}
+
+		if (const auto* volume = dynamic_cast<Volume*>(obj.get())) {
+			return {.address = getVolumeAddress(volume), .type = VolumeType};
 		}
 
 		return {};

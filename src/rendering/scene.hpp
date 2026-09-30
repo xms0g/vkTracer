@@ -7,6 +7,7 @@ struct SceneData {
 	std::shared_ptr<BVHNode> bvh;
 	size_t sphereCount;
 	size_t quadCount;
+	size_t volumeCount;
 	size_t bvhNodeCount;
 };
 

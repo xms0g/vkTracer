@@ -15,7 +15,7 @@ struct Sphere : Hittable {
 	glm::vec4 center2;
 	Material mat;
 
-	Sphere(const glm::vec4 centerRadius, const glm::vec4 center2, const Material mat)
+	Sphere(const glm::vec4 centerRadius, const glm::vec4 center2, const Material& mat)
 		: centerRadius(centerRadius), center2(center2), mat(mat) {
 	}
 

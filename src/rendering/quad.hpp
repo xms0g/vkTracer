@@ -20,8 +20,8 @@ struct Quad : Hittable {
 	glm::vec3 Q;
 	glm::vec3 u;
 	glm::vec3 v;
-	glm::vec3 normal;
-	glm::vec3 w;
+	glm::vec3 normal{};
+	glm::vec3 w{};
 	float D;
 	Material mat;
 
