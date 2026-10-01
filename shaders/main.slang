@@ -63,7 +63,7 @@ static constexpr float FOCUS_DIST = 1.0;
 static constexpr float VFOV = 90.0;
 static constexpr int SAMPLES_PER_PIXEL = 20;
 static constexpr float PIXEL_SAMPLES_SCALE = 1.0 / SAMPLES_PER_PIXEL;
-static constexpr float3 BGCOLOR = float3(0.0, 0.0, 0.0);
+static constexpr float3 BGCOLOR = float3(0.5, 0.5, 0.5);
 
 float3 rayColor(Ray ray, int depth, Scene scene, inout Random rand) {
     Ray r = ray;
