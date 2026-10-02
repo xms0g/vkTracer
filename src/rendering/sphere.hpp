@@ -12,12 +12,12 @@ struct GPUSphere {
 
 struct Sphere : Hittable {
 	glm::vec3 center;
-	float radius;
 	glm::vec3 center2;
+	float radius;
 	Material mat;
 
 	Sphere(const glm::vec3 center, const glm::vec3 center2, const float radius, const Material& mat)
-		: center(glm::vec3(center)), radius(radius), center2(center2), mat(mat) {
+		: center(glm::vec3(center)), center2(center2), radius(radius), mat(mat) {
 	}
 
 	~Sphere() override = default;

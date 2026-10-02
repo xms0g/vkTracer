@@ -353,13 +353,14 @@ void Device::createShaderStorageBuffers() {
 	std::array<Buffer, bufferSizes.size()> stagingBuffers;
 
 	for (uint32_t i = 0; i < stagingBuffers.size(); ++i) {
-		stagingBuffers[i] = Buffer{
-			bufferSizes[i],
-			mDevice,
-			mPhysicalDevice,
-			vk::BufferUsageFlagBits::eTransferSrc,
-			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
-		};
+		stagingBuffers[i] =
+				Buffer{
+					bufferSizes[i],
+					mDevice,
+					mPhysicalDevice,
+					vk::BufferUsageFlagBits::eTransferSrc,
+					vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
+				};
 	}
 
 	mShaderStorageBuffers.clear();

@@ -142,19 +142,6 @@ SceneData Scene::buildScene() {
 
 	spheres.push_back(sphere);
 
-	std::vector<std::shared_ptr<Hittable> > box = Quad::box(
-		glm::vec3(0.15f, -1.5f, -4.35f), // min corner
-		glm::vec3(1.15f, 0.0f, -3.25f), // max corner
-		0.0f,
-		Material{
-			.texture = {
-				.type = TextureType::SolidColor,
-				.color = glm::vec3(0.73f)
-			},
-			.type = MaterialType::Lambertian
-		});
-
-
 	std::vector<std::shared_ptr<Hittable> > hittables = spheres;
 	hittables.insert(hittables.end(), cornellBox.begin(), cornellBox.end());
 	hittables.insert(hittables.end(), volumes.begin(), volumes.end());
