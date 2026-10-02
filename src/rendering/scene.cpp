@@ -1,7 +1,4 @@
 #include "scene.hpp"
-
-#include <random>
-
 #include "quad.hpp"
 #include "sphere.hpp"
 #include "bvh.hpp"
