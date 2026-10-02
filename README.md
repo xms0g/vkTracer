@@ -9,7 +9,7 @@ Ray generation, intersection tests, material scattering, and pixel sampling are 
 ![Screenshot](assets/screenshot.png)
 
 ## Features
-- Sphere intersection
+- Sphere, quad, and volume intersection
 - Lambertian, metallic, and dielectric materials
 - Reflection/refraction
 - BVH
