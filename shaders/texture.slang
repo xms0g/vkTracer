@@ -1,5 +1,6 @@
 module texture;
 import perlin;
+import constants;
 
 [[vk::binding(2, 0)]]
 Sampler2D image;
@@ -10,8 +11,6 @@ public enum TextureType: uint {
     Noise,
 	Image
 };
-
-static constexpr float PI = 3.1415926535897932385;
 
 public struct Texture {
 	private TextureType type;

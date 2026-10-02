@@ -40,6 +40,8 @@ import random;
 import color;
 import material;
 import scene;
+import constants;
+import config;
 
 struct PushConstants {
     uint64_t bufferAddress;
@@ -56,16 +58,6 @@ PushConstants pc;
 
 [[vk::binding(0, 0)]]
 RWTexture2D<float4> pixelsOut;
-
-static constexpr float FLT_MAX = 3.402823466e+38f;
-static constexpr int MAX_DEPTH = 40;
-static constexpr float DEFOCUS_ANGLE = 0.0;
-static constexpr float FOCUS_DIST = 1.0;
-static constexpr float VFOV = 40.0;
-static constexpr int SAMPLES_PER_PIXEL = 500;
-static constexpr float PIXEL_SAMPLES_SCALE = 1.0 / SAMPLES_PER_PIXEL;
-static constexpr float3 BGCOLOR = float3(0.1);
-static constexpr uint TILE_SIZE = 8;
 
 float3 rayColor(Ray ray, int depth, Scene scene, inout Random rand) {
     Ray r = ray;

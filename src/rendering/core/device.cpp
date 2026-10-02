@@ -1,12 +1,7 @@
 #include "device.hpp"
 #include <set>
-#include <algorithm>
-#include <filesystem>
 #include <iostream>
 #include <stdexcept>
-#include <chrono>
-#include <random>
-#include <numeric>
 #include <unordered_set>
 #include <SDL_vulkan.h>
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE

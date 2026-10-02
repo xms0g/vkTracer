@@ -5,8 +5,7 @@ import hittable;
 import sphere;
 import quad;
 import random;
-
-static constexpr float FLT_MAX = 3.402823466e+38f;
+import constants;
 
 public struct Volume {
     float4 negInvDensity;
