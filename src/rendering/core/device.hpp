@@ -134,14 +134,14 @@ private:
 	std::vector<vk::raii::DescriptorSet> mGraphicsDescriptorSets;
 	GraphicsPipeline mGraphicsPipeline{};
 	ComputePipeline mComputePipeline{};
-	std::vector<Image> mShaderStorageImages;
+	std::array<Image, MAX_FRAMES_IN_FLIGHT> mShaderStorageImages{};
 	std::vector<Image> mTextureImages;
 	std::vector<Buffer> mShaderStorageBuffers;
-	std::vector<uint64_t> mShaderStorageBufferAddresses;
+	std::array<uint64_t, MAX_FRAMES_IN_FLIGHT> mShaderStorageBufferAddresses{};
 	std::vector<vk::raii::Sampler> mSamplers;
 	CommandPool mCommandPool;
-	std::vector<CommandBuffer> mGraphicsCommandBuffers;
-	std::vector<CommandBuffer> mComputeCommandBuffers;
+	std::array<CommandBuffer, MAX_FRAMES_IN_FLIGHT> mGraphicsCommandBuffers{};
+	std::array<CommandBuffer, MAX_FRAMES_IN_FLIGHT> mComputeCommandBuffers{};
 	vk::raii::Semaphore mSemaphore{nullptr};
 	std::vector<vk::raii::Fence> mFences;
 	std::array<uint32_t, MAX_FRAMES_IN_FLIGHT> mCurrentTiles{};

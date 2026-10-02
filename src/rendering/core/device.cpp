@@ -430,15 +430,13 @@ void Device::createShaderStorageBuffers() {
 		copyDataToBuffer(gpuVolumes.data(), volumeStagingBuffer, volumeSSBO, volumeBufferSize);
 		copyDataToBuffer(gpuBVH.data(), bvhStagingBuffer, bvhSSBO, bvhBufferSize);
 
-		mShaderStorageBufferAddresses.push_back(bvhAddress);
+		mShaderStorageBufferAddresses[i] = bvhAddress;
 	}
 }
 
 void Device::createShaderStorageImage() {
-	mShaderStorageImages.clear();
-
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
-		mShaderStorageImages.emplace_back(
+		mShaderStorageImages[i] = Image(
 			mDevice,
 			mPhysicalDevice,
 			ImageConfig{
@@ -569,12 +567,9 @@ void Device::createDescriptorSets() {
 }
 
 void Device::createCommandBuffers() {
-	mGraphicsCommandBuffers.clear();
-	mComputeCommandBuffers.clear();
-
 	for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
-		mGraphicsCommandBuffers.emplace_back(mDevice, mCommandPool, vk::CommandBufferLevel::ePrimary);
-		mComputeCommandBuffers.emplace_back(mDevice, mCommandPool, vk::CommandBufferLevel::ePrimary);
+		mGraphicsCommandBuffers[i] = CommandBuffer(mDevice, mCommandPool, vk::CommandBufferLevel::ePrimary);
+		mComputeCommandBuffers[i] = CommandBuffer(mDevice, mCommandPool, vk::CommandBufferLevel::ePrimary);
 	}
 }
 
