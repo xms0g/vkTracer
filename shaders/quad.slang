@@ -25,9 +25,9 @@ public struct Quad {
         }
 
         float3 intersection = ray.at(tHit);
-        float3 planarHitptVector = intersection - Q.xyz;
-        float alpha = dot(w, cross(planarHitptVector, v.xyz));
-        float beta = dot(w, cross(u.xyz, planarHitptVector));
+        float3 planarHitPointVector = intersection - Q.xyz;
+        float alpha = dot(w, cross(planarHitPointVector, v.xyz));
+        float beta = dot(w, cross(u.xyz, planarHitPointVector));
 
         if (alpha < 0.0 || alpha > 1.0 || beta < 0.0 || beta > 1.0) {
             return false;
