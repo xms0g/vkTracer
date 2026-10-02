@@ -33,7 +33,7 @@ public struct Camera {
         float3 pixDeltaU = viewportU / width;
         float3 pixDeltaV = viewportV / height;
 
-        float3 viewportUpperLeft = center.xyz + (focusDist * front) - viewportU/2 - viewportV/2;
+        float3 viewportUpperLeft = center + (focusDist * front) - viewportU/2 - viewportV/2;
 
         float3 pixel00Loc = viewportUpperLeft + 0.5 * (pixDeltaU + pixDeltaV);
 
@@ -44,7 +44,7 @@ public struct Camera {
         float3 offset = rand.sampleSquare();
         float3 pixelSample = pixel00Loc + (pixDeltaU * (x + offset.x)) + (pixDeltaV * (y + offset.y));
 
-        float3 rayOrig = defocusAngle <= 0 ? center.xyz : defocusDiskSample(center.xyz, rand);
+        float3 rayOrig = defocusAngle <= 0 ? center : defocusDiskSample(center, rand);
         float3 rayDir = normalize(pixelSample - rayOrig);
         float rayTime = rand.random();
         return {rayOrig, rayDir, rayTime};
