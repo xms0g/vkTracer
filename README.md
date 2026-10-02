@@ -1,5 +1,5 @@
 # vkTracer
-A GPU-based ray tracer inspired by Ray Tracing in One Weekend, implemented with modern C++ and Vulkan compute shaders.
+A GPU-based path tracer inspired by Ray Tracing in One Weekend, implemented with modern C++ and Vulkan compute shaders.
 
 Ray generation, intersection tests, material scattering, and pixel sampling are performed in a Vulkan compute shader, with the resulting image presented through a fullscreen triangle.
 
