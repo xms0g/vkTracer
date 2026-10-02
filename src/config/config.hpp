@@ -11,6 +11,11 @@ constexpr uint32_t HEIGHT{static_cast<uint32_t>(WIDTH / ASPECT)};
 // Render
 constexpr int32_t MAX_FRAMES_IN_FLIGHT{2};
 constexpr uint32_t THREADS_PER_GROUP{10};
+constexpr uint32_t TILE_SIZE = 8;
+constexpr uint32_t TILES_X = (WIDTH  + TILE_SIZE - 1) / TILE_SIZE;
+constexpr uint32_t TILES_Y = (HEIGHT + TILE_SIZE - 1) / TILE_SIZE;
+constexpr uint32_t TILE_COUNT = TILES_X * TILES_Y;
+constexpr uint32_t TILES_PER_FRAME = 64;
 constexpr auto SHADER_NAME = "main.spv";
 constexpr auto TEXTURE_PATH = "assets/textures/earthmap.jpg";
 // Camera

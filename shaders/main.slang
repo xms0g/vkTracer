@@ -43,6 +43,7 @@ import scene;
 
 struct PushConstants {
     uint64_t bufferAddress;
+    uint32_t currentTile;
     float4 resolution;
     float4 camCenter;
     float4 camFront;
@@ -57,13 +58,14 @@ PushConstants pc;
 RWTexture2D<float4> pixelsOut;
 
 static constexpr float FLT_MAX = 3.402823466e+38f;
-static constexpr int MAX_DEPTH = 5;
+static constexpr int MAX_DEPTH = 40;
 static constexpr float DEFOCUS_ANGLE = 0.0;
 static constexpr float FOCUS_DIST = 1.0;
 static constexpr float VFOV = 40.0;
-static constexpr int SAMPLES_PER_PIXEL = 100;
+static constexpr int SAMPLES_PER_PIXEL = 500;
 static constexpr float PIXEL_SAMPLES_SCALE = 1.0 / SAMPLES_PER_PIXEL;
 static constexpr float3 BGCOLOR = float3(0.1);
+static constexpr uint TILE_SIZE = 8;
 
 float3 rayColor(Ray ray, int depth, Scene scene, inout Random rand) {
     Ray r = ray;
@@ -96,27 +98,35 @@ float3 rayColor(Ray ray, int depth, Scene scene, inout Random rand) {
 }
 
 [shader("compute")]
-[numthreads(10,10,1)]
-void compMain(uint3 threadId : SV_DispatchThreadID) {
-    uint2 pixel = threadId.xy;
+[numthreads(8,8,1)]
+void compMain(uint3 groupId : SV_GroupID, uint3 threadId : SV_GroupThreadID) {
     uint width = (uint)pc.resolution.x;
     uint height = (uint)pc.resolution.y;
 
-    if (pixel.x >= width || pixel.y >= height)
+    const uint tilesX = (width + TILE_SIZE - 1) / TILE_SIZE;
+    uint tileIndex = pc.currentTile + groupId.x;
+
+    uint tileX = tileIndex % tilesX;
+    uint tileY = tileIndex / tilesX;
+
+    uint x = tileX * 8 + threadId.x;
+    uint y = tileY * 8 + threadId.y;
+
+    if (x >= width || y >= height)
         return;
 
     Camera camera = {width, height, VFOV, DEFOCUS_ANGLE, FOCUS_DIST};
     Scene scene = {pc.bufferAddress};
 
-    uint seed = pixel.x + pixel.y * width + width * height + 1;
+    uint seed = x + y * width + width * height + 1;
     Random random = {seed};
 
     float3 pixColor = float3(0.0);
     for (int i = 0; i < SAMPLES_PER_PIXEL; ++i) {
-        Ray ray = camera.getRay(pixel.x, pixel.y, pc.camCenter.xyz, pc.camFront.xyz, pc.camRight.xyz, pc.camUp.xyz, random);
+        Ray ray = camera.getRay(x, y, pc.camCenter.xyz, pc.camFront.xyz, pc.camRight.xyz, pc.camUp.xyz, random);
         pixColor += rayColor(ray, MAX_DEPTH, scene, random);
     }
 
     float3 color = pixColor * PIXEL_SAMPLES_SCALE;
-    pixelsOut[pixel] = float4(linear2gamma(color), 1.0);
+    pixelsOut[uint2(x, y)] = float4(linear2gamma(color), 1.0);
 }

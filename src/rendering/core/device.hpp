@@ -9,6 +9,7 @@
 #include "image.hpp"
 #include "pipelineBuilder.hpp"
 #include "swapchain.hpp"
+#include "../../config/config.hpp"
 
 class Camera;
 class Image;
@@ -101,6 +102,7 @@ private:
 
 	struct ComputePushConstants {
 		uint64_t bufferAddress;
+		uint32_t currentTile;
 		alignas(16) glm::vec4 resolution;
 		alignas(16) glm::vec4 camCenter;
 		alignas(16) glm::vec4 camFront;
@@ -142,6 +144,7 @@ private:
 	std::vector<CommandBuffer> mComputeCommandBuffers;
 	vk::raii::Semaphore mSemaphore{nullptr};
 	std::vector<vk::raii::Fence> mFences;
+	std::array<uint32_t, MAX_FRAMES_IN_FLIGHT> mCurrentTiles{};
 	vk::raii::DebugUtilsMessengerEXT mDebugMessenger{nullptr};
 };
 

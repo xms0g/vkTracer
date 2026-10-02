@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <chrono>
 #include <random>
+#include <numeric>
 #include <unordered_set>
 #include <SDL_vulkan.h>
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -26,7 +27,6 @@
 #include "../scene.hpp"
 #include "../volume.hpp"
 #include "../../core/window.hpp"
-#include "../../config/config.hpp"
 #include "../../core/camera.hpp"
 #include "../../io/filesystem.hpp"
 
@@ -674,6 +674,7 @@ void Device::recordComputeCommandBuffer() {
 		0,
 		ComputePushConstants{
 			.bufferAddress = mShaderStorageBufferAddresses[mFrameIndex],
+			.currentTile = mCurrentTiles[mFrameIndex],
 			.resolution = glm::vec4(WIDTH, HEIGHT, 0, 0),
 			.camCenter = glm::vec4(mCamera.center(), 0.0f),
 			.camFront = glm::vec4(mCamera.front(), 0.0f),
@@ -681,10 +682,7 @@ void Device::recordComputeCommandBuffer() {
 			.camUp = glm::vec4(mCamera.up(), 0.0f),
 		});
 
-	(*cmd).dispatch(
-		WIDTH / THREADS_PER_GROUP,
-		HEIGHT / THREADS_PER_GROUP,
-		1);
+	(*cmd).dispatch(TILES_PER_FRAME, 1, 1);
 
 	Image::transitionImageLayout(
 		**mShaderStorageImages[mFrameIndex],

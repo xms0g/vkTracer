@@ -14,6 +14,11 @@ void Device::submit() {
 		waitValue = mComputeWaitValue;
 		signalValue = mComputeSignalValue;
 		stage = vk::PipelineStageFlagBits2::eComputeShader;
+
+		mCurrentTiles[mFrameIndex] += TILES_PER_FRAME;
+
+		if (mCurrentTiles[mFrameIndex] >= TILE_COUNT)
+			mCurrentTiles[mFrameIndex] = 0;
 	} else {
 		recordGraphicsCommandBuffer(mImageIndex);
 		
