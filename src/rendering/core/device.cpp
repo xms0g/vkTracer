@@ -650,16 +650,31 @@ void Device::recordComputeCommandBuffer() {
 	(*cmd).reset();
 	(*cmd).begin({});
 
-	Image::transitionImageLayout(
-		**mShaderStorageImages[mFrameIndex],
-		vk::PipelineStageFlagBits2::eTopOfPipe,
-		vk::AccessFlagBits2::eNone,
-		vk::PipelineStageFlagBits2::eComputeShader,
-		vk::AccessFlagBits2::eShaderWrite,
-		vk::ImageLayout::eUndefined,
-		vk::ImageLayout::eGeneral,
-		cmd
-	);
+	if (!mShaderStorageImageInitialized[mFrameIndex]) {
+		Image::transitionImageLayout(
+			**mShaderStorageImages[mFrameIndex],
+			vk::PipelineStageFlagBits2::eTopOfPipe,
+			vk::AccessFlagBits2::eNone,
+			vk::PipelineStageFlagBits2::eComputeShader,
+			vk::AccessFlagBits2::eShaderWrite,
+			vk::ImageLayout::eUndefined,
+			vk::ImageLayout::eGeneral,
+			cmd
+		);
+
+		mShaderStorageImageInitialized[mFrameIndex] = true;
+	} else {
+		Image::transitionImageLayout(
+			**mShaderStorageImages[mFrameIndex],
+			vk::PipelineStageFlagBits2::eFragmentShader,
+			vk::AccessFlagBits2::eShaderSampledRead,
+			vk::PipelineStageFlagBits2::eComputeShader,
+			vk::AccessFlagBits2::eShaderWrite,
+			vk::ImageLayout::eShaderReadOnlyOptimal,
+			vk::ImageLayout::eGeneral,
+			cmd
+		);
+	}
 
 	(*cmd).bindPipeline(vk::PipelineBindPoint::eCompute, **mComputePipeline);
 	(*cmd).bindDescriptorSets(

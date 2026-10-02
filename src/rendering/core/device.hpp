@@ -145,6 +145,7 @@ private:
 	vk::raii::Semaphore mSemaphore{nullptr};
 	std::vector<vk::raii::Fence> mFences;
 	std::array<uint32_t, MAX_FRAMES_IN_FLIGHT> mCurrentTiles{};
+	std::array<bool, MAX_FRAMES_IN_FLIGHT> mShaderStorageImageInitialized{};
 	vk::raii::DebugUtilsMessengerEXT mDebugMessenger{nullptr};
 };
 
