@@ -1,6 +1,7 @@
 module camera;
 import ray;
 import random;
+import config;
 
 public struct Camera {
     private uint width;
@@ -26,7 +27,7 @@ public struct Camera {
     }
 
     [mutating]
-    public Ray getRay(int x, int y, float3 center, float3 front, float3 right, float3 up, inout Random rand) {
+    public Ray getRay(int x, int y, int si, int sj, float3 center, float3 front, float3 right, float3 up, inout Random rand) {
         float3 viewportU = right * viewportWidth;
         float3 viewportV = -up * viewportHeight;
 
@@ -41,7 +42,7 @@ public struct Camera {
         defocusDiskU = right * defocusRadius;
         defocusDiskV = up * defocusRadius;
 
-        float3 offset = rand.sampleSquare();
+        float3 offset = rand.sampleSquareStratified(si, sj, RECIP_SQRT_SPP);
         float3 pixelSample = pixel00Loc + (pixDeltaU * (x + offset.x)) + (pixDeltaV * (y + offset.y));
 
         float3 rayOrig = defocusAngle <= 0 ? center : defocusDiskSample(center, rand);

@@ -3,7 +3,6 @@
 #include <glm/glm.hpp>
 #include "aabb.hpp"
 #include "hittable.hpp"
-#include "texture.hpp"
 #include "material.hpp"
 
 struct GPUQuad {

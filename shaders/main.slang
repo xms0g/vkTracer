@@ -114,9 +114,11 @@ void compMain(uint3 groupId : SV_GroupID, uint3 threadId : SV_GroupThreadID) {
     Random random = {seed};
 
     float3 pixColor = float3(0.0);
-    for (int i = 0; i < SAMPLES_PER_PIXEL; ++i) {
-        Ray ray = camera.getRay(x, y, pc.camCenter.xyz, pc.camFront.xyz, pc.camRight.xyz, pc.camUp.xyz, random);
-        pixColor += rayColor(ray, MAX_DEPTH, scene, random);
+    for (int i = 0; i < SQRT_SPP; ++i) {
+        for (int j = 0; j < SQRT_SPP; ++j) {
+            Ray ray = camera.getRay(x, y, i, j, pc.camCenter.xyz, pc.camFront.xyz, pc.camRight.xyz, pc.camUp.xyz, random);
+            pixColor += rayColor(ray, MAX_DEPTH, scene, random);
+        }
     }
 
     float3 color = pixColor * PIXEL_SAMPLES_SCALE;

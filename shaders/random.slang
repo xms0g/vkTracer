@@ -57,4 +57,15 @@ public struct Random {
     public float3 sampleSquare() {
         return float3(random() - 0.5, random() - 0.5, 0.0);
     }
+
+    [mutating]
+    public float3 sampleSquareStratified(int si, int sj, float recipSqrtSpp) {
+        // Returns the vector to a random point in the square sub-pixel specified by grid
+        // indices si and sj for an idealized unit square pixel [-.5,-.5] to [+.5,+.5].
+
+        float px = ((si + random()) * recipSqrtSpp) - 0.5;
+        float py = ((sj + random()) * recipSqrtSpp) - 0.5;
+
+        return float3(px, py, 0);
+    }
 };
