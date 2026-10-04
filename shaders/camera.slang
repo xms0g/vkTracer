@@ -4,48 +4,50 @@ import random;
 import config;
 
 public struct Camera {
+    private float3 center;
+    private float3 front;
+    private float3 right;
+    private float3 up;
     private uint width;
     private uint height;
-    private float defocusAngle;
-    private float focusDist;
     private float3 defocusDiskU;
     private float3 defocusDiskV;
     private float viewportHeight;
     private float viewportWidth;
 
-    public __init (uint width, uint height, float vfov, float defocusAngle, float focusDist) {
+    public __init(float3 center, float3 front, float3 right, float3 up, uint width, uint height) {
+        this.center = center;
+        this.front = front;
+        this.right = right;
+        this.up = up;
         this.width = width;
         this.height = height;
-        this.defocusAngle = defocusAngle;
-        this.focusDist = focusDist;
-        this.defocusDiskU = float3(0.0);
-        this.defocusDiskV = float3(0.0);
-        float theta = radians(vfov);
+        float theta = radians(VFOV);
         float h = tan(theta / 2);
-        this.viewportHeight = 2.0 * h * focusDist;
+        this.viewportHeight = 2.0 * h * FOCUS_DIST;
         this.viewportWidth = viewportHeight * (float(width)/height);
     }
 
     [mutating]
-    public Ray getRay(int x, int y, int si, int sj, float3 center, float3 front, float3 right, float3 up, inout Random rand) {
+    public Ray getRay(int x, int y, int si, int sj, inout Random rand) {
         float3 viewportU = right * viewportWidth;
         float3 viewportV = -up * viewportHeight;
 
         float3 pixDeltaU = viewportU / width;
         float3 pixDeltaV = viewportV / height;
 
-        float3 viewportUpperLeft = center + (focusDist * front) - viewportU/2 - viewportV/2;
+        float3 viewportUpperLeft = center + (FOCUS_DIST * front) - viewportU/2 - viewportV/2;
 
         float3 pixel00Loc = viewportUpperLeft + 0.5 * (pixDeltaU + pixDeltaV);
 
-        float defocusRadius = focusDist * tan(radians(defocusAngle / 2));
+        float defocusRadius = FOCUS_DIST * tan(radians(DEFOCUS_ANGLE / 2));
         defocusDiskU = right * defocusRadius;
         defocusDiskV = up * defocusRadius;
 
         float3 offset = rand.sampleSquareStratified(si, sj, RECIP_SQRT_SPP);
         float3 pixelSample = pixel00Loc + (pixDeltaU * (x + offset.x)) + (pixDeltaV * (y + offset.y));
 
-        float3 rayOrig = defocusAngle <= 0 ? center : defocusDiskSample(center, rand);
+        float3 rayOrig = DEFOCUS_ANGLE <= 0 ? center : defocusDiskSample(center, rand);
         float3 rayDir = normalize(pixelSample - rayOrig);
         float rayTime = rand.random();
         return {rayOrig, rayDir, rayTime};

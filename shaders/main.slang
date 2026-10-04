@@ -107,7 +107,14 @@ void compMain(uint3 groupId : SV_GroupID, uint3 threadId : SV_GroupThreadID) {
     if (x >= width || y >= height)
         return;
 
-    Camera camera = {width, height, VFOV, DEFOCUS_ANGLE, FOCUS_DIST};
+    Camera camera = {
+        pc.camCenter.xyz, 
+        pc.camFront.xyz, 
+        pc.camRight.xyz, 
+        pc.camUp.xyz, 
+        width, 
+        height, 
+    };
     Scene scene = {pc.bufferAddress};
 
     uint seed = x + y * width + width * height + 1;
@@ -116,7 +123,7 @@ void compMain(uint3 groupId : SV_GroupID, uint3 threadId : SV_GroupThreadID) {
     float3 pixColor = float3(0.0);
     for (int i = 0; i < SQRT_SPP; ++i) {
         for (int j = 0; j < SQRT_SPP; ++j) {
-            Ray ray = camera.getRay(x, y, i, j, pc.camCenter.xyz, pc.camFront.xyz, pc.camRight.xyz, pc.camUp.xyz, random);
+            Ray ray = camera.getRay(x, y, i, j, random);
             pixColor += rayColor(ray, MAX_DEPTH, scene, random);
         }
     }
