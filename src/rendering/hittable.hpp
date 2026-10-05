@@ -7,9 +7,10 @@ enum HittableType : uint32_t {
 	BVHType
 };
 
-struct HittableRef {
+struct alignas(16) HittableRef {
 	uint64_t address;
 	HittableType type;
+	uint32_t padding;
 };
 
 struct Hittable {

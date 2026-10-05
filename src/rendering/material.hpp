@@ -9,10 +9,10 @@ enum class MaterialType: uint32_t {
 	Isotropic
 };
 
-struct Material {
+struct alignas(16) Material {
 	Texture texture;
 	MaterialType type;
 	float fuzz;
 	float refractionIndex;
-	uint32_t pad;
+	uint32_t padding;
 };

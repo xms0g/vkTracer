@@ -10,6 +10,7 @@ public enum HittableType : uint {
 public struct HittableRef {
     private uint64_t addr;
     private HittableType t;
+    private uint padding;
 
     public __init(uint64_t address, HittableType type) {
         this.addr  = address;

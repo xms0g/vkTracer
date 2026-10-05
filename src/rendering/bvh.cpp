@@ -101,7 +101,7 @@ std::vector<GPUBVHNode> BVHNode::flatten(const BVHNode& root,
 		const uint64_t address = volumeBaseAddress + index * sizeof(GPUVolume);
 		volumeAdresses[volume] = address;
 
-		gpuVolumes.emplace_back(glm::vec4(volume->negInvDensity), volume->mat, makeRef(volume->boundary));
+		gpuVolumes.emplace_back(volume->mat, makeRef(volume->boundary), volume->negInvDensity);
 
 		return address;
 	};

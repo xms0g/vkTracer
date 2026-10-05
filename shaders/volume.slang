@@ -8,9 +8,10 @@ import random;
 import constants;
 
 public struct Volume {
-    float4 negInvDensity;
     Material mat;
     HittableRef boundary;
+    float negInvDensity;
+    uint padding;
   
     public bool hit(Ray ray, float2 t, inout HitRecord rec, inout Random rand) {
         HitRecord rec1;
@@ -41,7 +42,7 @@ public struct Volume {
 
         float rayLength = length(ray.direction);
         float distanceInsideBoundary = (rec2.interval - rec1.interval) * rayLength;
-        float hitDistance = negInvDensity.x * log(rand.random());
+        float hitDistance = negInvDensity * log(rand.random());
 
         if (hitDistance > distanceInsideBoundary) {
             return false;

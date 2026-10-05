@@ -3,10 +3,11 @@
 #include "hittable.hpp"
 #include "material.hpp"
 
-struct GPUVolume {
-	glm::vec4 negInvDensity;
+struct alignas(16) GPUVolume {
 	Material mat;
 	HittableRef boundary;
+	float negInvDensity;
+	uint32_t padding;
 };
 
 struct Volume : Hittable {

@@ -8,8 +8,8 @@ enum class TextureType: uint32_t {
 	Image
 };
 
-struct Texture {
-	TextureType type;
-	glm::vec3 color;
+struct alignas(16) Texture {
 	glm::vec4 noise;
+	glm::vec3 color;
+	TextureType type;
 };

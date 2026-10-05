@@ -13,10 +13,10 @@ public enum TextureType: uint {
 };
 
 public struct Texture {
-	private TextureType type;
-	private float3 color;
     private float4 noise;
-
+    private float3 color;
+	private TextureType type;
+	
     public float3 sample(float2 uv, float3 p) {
         if (type == TextureType::SolidColor) {
             return color;

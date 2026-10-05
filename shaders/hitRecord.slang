@@ -15,7 +15,7 @@ public struct Material {
 	public MaterialType type;
 	public float fuzz;
 	public float refractionIndex;
-	uint pad;
+	uint padding;
 };
 
 public struct HitRecord {
