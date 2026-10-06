@@ -22,6 +22,8 @@ public struct Camera {
         this.up = up;
         this.width = width;
         this.height = height;
+        this.defocusDiskU = float3(0.0);
+        this.defocusDiskV = float3(0.0);
         float theta = radians(VFOV);
         float h = tan(theta / 2);
         this.viewportHeight = 2.0 * h * FOCUS_DIST;
