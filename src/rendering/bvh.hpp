@@ -8,9 +8,9 @@ struct GPUQuad;
 struct GPUSphere;
 
 struct GPUBVHNode {
-	AABB bounds;
 	HittableRef left{};
 	HittableRef right{};
+	AABB bounds;
 };
 
 struct BVHNode : Hittable {

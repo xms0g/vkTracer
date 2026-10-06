@@ -5,6 +5,7 @@ struct AABB {
 	glm::vec2 x{};
 	glm::vec2 y{};
 	glm::vec2 z{};
+	uint64_t padding{};
 
 	AABB() = default;
 

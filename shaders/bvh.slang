@@ -11,9 +11,9 @@ import volume;
 static const uint MAX_STACK_SIZE = 64;
 
 public struct BVHNode {
-	AABB bounds;
 	HittableRef left;
 	HittableRef right;
+    AABB bounds;
 
     public bool hit(Ray ray, float2 t, inout HitRecord rec, inout Random rand) {
         if (!bounds.hit(ray, t)) {

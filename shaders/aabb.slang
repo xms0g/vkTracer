@@ -5,6 +5,7 @@ public struct AABB {
     float2 x;
     float2 y;
     float2 z;
+	uint padding;
 
     float2 axis(int axis) {
         if (axis == 0) return x;
