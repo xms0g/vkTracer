@@ -13,7 +13,7 @@ SceneData Scene::buildScene() {
 		glm::vec3(0.0f, 3.0f, 0.0f),
 		glm::vec3(0.0f, 0.0f, 3.0f),
 		Material{
-			.texture = {.type = TextureType::SolidColor, .color = glm::vec3(0.12f, 0.45f, 0.15f)},
+			.texture = {.color = glm::vec3(0.12f, 0.45f, 0.15f), .type = TextureType::SolidColor},
 			.type = MaterialType::Lambertian,
 		}));
 	// Left
@@ -22,7 +22,7 @@ SceneData Scene::buildScene() {
 		glm::vec3(0.0f, 3.0f, 0.0f),
 		glm::vec3(0.0f, 0.0f, 3.0f),
 		Material{
-			.texture = {.type = TextureType::SolidColor, .color = glm::vec3(0.65f, 0.05f, 0.05f)},
+			.texture = {.color = glm::vec3(0.65f, 0.05f, 0.05f), .type = TextureType::SolidColor},
 			.type = MaterialType::Lambertian,
 		}));
 	// Floor
@@ -40,7 +40,7 @@ SceneData Scene::buildScene() {
 		glm::vec3(-3.0f, 0.0f, 0.0f),
 		glm::vec3(0.0f, 0.0f, -3.0f),
 		Material{
-			.texture = {.type = TextureType::SolidColor, .color = glm::vec3(0.73f)},
+			.texture = {.color = glm::vec3(0.73f), .type = TextureType::SolidColor},
 			.type = MaterialType::Lambertian,
 		}));
 	// Back
@@ -49,7 +49,7 @@ SceneData Scene::buildScene() {
 		glm::vec3(3.0f, 0.0f, 0.0f),
 		glm::vec3(0.0f, 3.0f, 0.0f),
 		Material{
-			.texture = {.type = TextureType::SolidColor, .color = glm::vec3(0.73f)},
+			.texture = {.color = glm::vec3(0.73f), .type = TextureType::SolidColor},
 			.type = MaterialType::Lambertian,
 		}));
 	// Light
@@ -58,7 +58,7 @@ SceneData Scene::buildScene() {
 		glm::vec3(-1.5f, 0.0f, 0.0f),
 		glm::vec3(0.0f, 0.0f, -1.0f),
 		Material{
-			.texture = {.type = TextureType::SolidColor, .color = glm::vec3(7.0f)},
+			.texture = {.color = glm::vec3(7.0f), .type = TextureType::SolidColor},
 			.type = MaterialType::DiffuseLight,
 		}));
 
@@ -74,8 +74,8 @@ SceneData Scene::buildScene() {
 		0.45f,
 		Material{
 			.texture = {
-				.type = TextureType::SolidColor,
-				.color = glm::vec3(0.7f, 0.3f, 0.1f)
+				.color = glm::vec3(0.7f, 0.3f, 0.1f),
+				.type = TextureType::SolidColor
 			},
 			.type = MaterialType::Lambertian
 		}));
@@ -87,8 +87,8 @@ SceneData Scene::buildScene() {
 		0.7f,
 		Material{
 			.texture = {
-				.type = TextureType::SolidColor,
-				.color = glm::vec3(0.8f, 0.8f, 0.9f)
+				.color = glm::vec3(0.8f, 0.8f, 0.9f),
+				.type = TextureType::SolidColor
 			},
 			.type = MaterialType::Metal,
 		}));
@@ -112,8 +112,8 @@ SceneData Scene::buildScene() {
 		0.45f,
 		Material{
 			.texture = {
-				.type = TextureType::Noise,
-				.noise = glm::vec4(7.0f, 0.5f, 2.0f, 0.0f)
+				.noise = glm::vec4(7.0f, 0.5f, 2.0f, 0.0f),
+				.type = TextureType::Noise
 			},
 			.type = MaterialType::Lambertian,
 		}));
@@ -131,11 +131,11 @@ SceneData Scene::buildScene() {
 
 	volumes.emplace_back(std::make_shared<Volume>(
 		sphere,
-		0.2f,
+		2.2f,
 		Material{
 			.texture = {
-				.type = TextureType::SolidColor,
-				.color = glm::vec3(0.2f, 0.4f, 0.9f)
+				.color = glm::vec3(0.2f, 0.4f, 0.9f),
+				.type = TextureType::SolidColor
 			},
 			.type = MaterialType::Isotropic
 		}));
