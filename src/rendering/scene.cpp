@@ -86,23 +86,8 @@ SceneData Scene::buildScene() {
 		glm::vec3(0.0f),
 		0.7f,
 		Material{
-			.texture = {
-				.color = glm::vec3(0.8f, 0.8f, 0.9f),
-				.type = TextureType::SolidColor
-			},
+			.texture = {.color = glm::vec3(0.8f, 0.8f, 0.9f), .type = TextureType::SolidColor},
 			.type = MaterialType::Metal,
-		}));
-
-	// Image-textured sphere
-	spheres.emplace_back(std::make_shared<Sphere>(
-		glm::vec3(1.0f, -0.95f, -2.75f),
-		glm::vec3(0.0f),
-		0.45f,
-		Material{
-			.texture = {
-				.type = TextureType::Image
-			},
-			.type = MaterialType::Lambertian,
 		}));
 
 	// Noise sphere
@@ -111,36 +96,41 @@ SceneData Scene::buildScene() {
 		glm::vec3(0.0f),
 		0.45f,
 		Material{
-			.texture = {
-				.noise = glm::vec4(7.0f, 0.5f, 2.0f, 0.0f),
-				.type = TextureType::Noise
-			},
+			.texture = {.noise = glm::vec4(7.0f, 0.5f, 2.0f, 0.0f), .type = TextureType::Noise},
 			.type = MaterialType::Lambertian,
 		}));
 
-	std::vector<std::shared_ptr<Hittable> > volumes;
-
-	auto sphere = std::make_shared<Sphere>(
+	// Dielectric sphere
+	spheres.emplace_back(std::make_shared<Sphere>(
 		glm::vec3(-0.75f, -0.95f, -2.75f),
 		glm::vec3(0.0f),
 		0.45f,
 		Material{
 			.type = MaterialType::Dielectric,
 			.refractionIndex = 1.5f
+		}));
+
+	// Image-textured sphere
+	auto sphere = std::make_shared<Sphere>(
+		glm::vec3(1.0f, -0.95f, -2.75f),
+		glm::vec3(0.0f),
+		0.45f,
+		Material{
+			.texture = {.type = TextureType::Image},
+			.type = MaterialType::Lambertian,
 		});
+
+	spheres.push_back(sphere);
+
+	std::vector<std::shared_ptr<Hittable> > volumes;
 
 	volumes.emplace_back(std::make_shared<Volume>(
 		sphere,
-		2.2f,
+		0.2f,
 		Material{
-			.texture = {
-				.color = glm::vec3(0.2f, 0.4f, 0.9f),
-				.type = TextureType::SolidColor
-			},
+			.texture = {.color = glm::vec3(1.0f, 1.0f, 1.0f), .type = TextureType::SolidColor},
 			.type = MaterialType::Isotropic
 		}));
-
-	spheres.push_back(sphere);
 
 	std::vector<std::shared_ptr<Hittable> > hittables = spheres;
 	hittables.insert(hittables.end(), cornellBox.begin(), cornellBox.end());
