@@ -17,7 +17,7 @@ struct Sphere : Hittable {
 	Material mat;
 
 	Sphere(const glm::vec3 center, const glm::vec3 center2, const float radius, const Material& mat)
-		: center(glm::vec3(center)), center2(center2), radius(radius), mat(mat) {
+		: center(center), center2(center2), radius(radius), mat(mat) {
 	}
 
 	~Sphere() override = default;
