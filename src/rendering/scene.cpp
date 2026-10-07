@@ -111,24 +111,28 @@ SceneData Scene::buildScene() {
 		}));
 
 	// Image-textured sphere
-	auto sphere = std::make_shared<Sphere>(
+	spheres.emplace_back(std::make_shared<Sphere>(
 		glm::vec3(1.0f, -0.95f, -2.75f),
 		glm::vec3(0.0f),
 		0.45f,
 		Material{
 			.texture = {.type = TextureType::Image},
 			.type = MaterialType::Lambertian,
-		});
-
-	spheres.push_back(sphere);
+		}));
 
 	std::vector<std::shared_ptr<Hittable> > volumes;
 
+	auto boundary = std::make_shared<Sphere>(
+		glm::vec3(1.0f, -0.95f, -2.75f),
+		glm::vec3(0.0f),
+		0.55f,
+		Material{});
+
 	volumes.emplace_back(std::make_shared<Volume>(
-		sphere,
-		0.2f,
+		boundary,
+		0.05f,
 		Material{
-			.texture = {.color = glm::vec3(1.0f, 1.0f, 1.0f), .type = TextureType::SolidColor},
+			.texture = {.color = glm::vec3(0.8f), .type = TextureType::SolidColor},
 			.type = MaterialType::Isotropic
 		}));
 
@@ -138,7 +142,7 @@ SceneData Scene::buildScene() {
 
 	return {
 		.bvh = std::make_shared<BVHNode>(hittables, 0, hittables.size()),
-		.sphereCount = spheres.size(),
+		.sphereCount = spheres.size() + 1,
 		.quadCount = cornellBox.size(),
 		.volumeCount = volumes.size(),
 		.bvhNodeCount = BVHNode::count,
