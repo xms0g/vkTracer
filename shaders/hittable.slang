@@ -12,11 +12,6 @@ public struct HittableRef {
     private HittableType t;
     private uint padding;
 
-    public __init(uint64_t address, HittableType type) {
-        this.addr  = address;
-        this.t = type;
-    }
-
     public property uint64_t address {
         get { return addr; }
         set { addr = newValue; }
