@@ -135,6 +135,7 @@ void Device::createInstance() {
 		.apiVersion = vk::ApiVersion14
 	};
 
+	vk::ValidationFeaturesEXT syncValidationFeature = {};
 	if (enableValidationLayers) {
 		std::unordered_set<std::string> supportedValidationLayers;
 		for (const auto& layer: mContext.enumerateInstanceLayerProperties()) {
@@ -148,6 +149,9 @@ void Device::createInstance() {
 		if (!supportedRequiredValidationLayers) {
 			throw std::runtime_error("Required Validation Layers not supported");
 		}
+
+		syncValidationFeature.enabledValidationFeatureCount = static_cast<uint32_t>(syncValidationFeatures.size());
+		syncValidationFeature.pEnabledValidationFeatures = syncValidationFeatures.data();
 	}
 
 	const auto sdlExtensions = getRequiredInstanceExtensions();
@@ -172,6 +176,7 @@ void Device::createInstance() {
 #endif
 
 	const vk::InstanceCreateInfo createInfo{
+		.pNext = &syncValidationFeature,
 		.flags = flags,
 		.pApplicationInfo = &appInfo,
 		.enabledLayerCount = static_cast<uint32_t>(validationLayers.size()),

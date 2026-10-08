@@ -5,6 +5,10 @@ constexpr std::array validationLayers = {
         "VK_LAYER_KHRONOS_validation"
 };
 
+constexpr std::array syncValidationFeatures = {
+	vk::ValidationFeatureEnableEXT::eSynchronizationValidation
+};
+
 #ifdef NDEBUG
 constexpr bool enableValidationLayers = false;
 #else
