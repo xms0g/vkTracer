@@ -140,11 +140,12 @@ SceneData Scene::buildScene() {
 	hittables.insert(hittables.end(), cornellBox.begin(), cornellBox.end());
 	hittables.insert(hittables.end(), volumes.begin(), volumes.end());
 
+	const auto bvh = std::make_shared<BVHNode>(hittables, 0, hittables.size());
 	return {
-		.bvh = std::make_shared<BVHNode>(hittables, 0, hittables.size()),
+		.bvh = bvh,
 		.sphereCount = spheres.size() + 1,
 		.quadCount = cornellBox.size(),
 		.volumeCount = volumes.size(),
-		.bvhNodeCount = BVHNode::count,
+		.bvhNodeCount = bvh->count(),
 	};
 }

@@ -17,7 +17,6 @@ struct BVHNode : Hittable {
 	AABB bounds;
 	std::shared_ptr<Hittable> left{};
 	std::shared_ptr<Hittable> right{};
-	static size_t count;
 
 	BVHNode() = default;
 
@@ -25,6 +24,9 @@ struct BVHNode : Hittable {
 
 	[[nodiscard]]
 	AABB boundingBox() const override;
+
+	[[nodiscard]]
+	size_t count() const;
 
 	static std::vector<GPUBVHNode> flatten(const BVHNode& root,
 	                                       std::vector<GPUSphere>& gpuSpheres,

@@ -6,11 +6,7 @@
 #include "quad.hpp"
 #include "volume.hpp"
 
-size_t BVHNode::count = 0;
-
 BVHNode::BVHNode(std::vector<std::shared_ptr<Hittable> >& objects, const size_t start, const size_t end) {
-	++count;
-
 	for (size_t objectIndex = start; objectIndex < end; objectIndex++)
 		bounds = AABB(bounds, objects[objectIndex]->boundingBox());
 
@@ -37,6 +33,19 @@ BVHNode::BVHNode(std::vector<std::shared_ptr<Hittable> >& objects, const size_t 
 
 AABB BVHNode::boundingBox() const {
 	return bounds;
+}
+
+size_t BVHNode::count() const {
+	size_t count = 1;
+
+	if (const auto bv = dynamic_cast<BVHNode*>(left.get()))
+		count += bv->count();
+
+	if (const auto bv = dynamic_cast<BVHNode*>(right.get())) {
+		count += bv->count();
+	}
+
+	return count;
 }
 
 std::vector<GPUBVHNode> BVHNode::flatten(const BVHNode& root,
