@@ -24,8 +24,8 @@ DescriptorSetWriter::DescriptorSetWriter(const vk::raii::Device& device)
 }
 
 void DescriptorSetWriter::reserve(const uint32_t count) {
-	mBufferInfos.reserve(count);
-	mImageInfos.reserve(count);
+	mBufferInfos.resize(count);
+	mImageInfos.resize(count);
 	mWrites.reserve(count);
 }
 

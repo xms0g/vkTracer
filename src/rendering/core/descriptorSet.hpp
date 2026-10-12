@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <list>
 #define VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
 #include <vulkan/vulkan_raii.hpp>
 
@@ -43,7 +44,7 @@ public:
 
 private:
 	std::vector<vk::WriteDescriptorSet> mWrites;
-	std::vector<vk::DescriptorBufferInfo> mBufferInfos;
-	std::vector<vk::DescriptorImageInfo> mImageInfos;
+	std::list<vk::DescriptorBufferInfo> mBufferInfos;
+	std::list<vk::DescriptorImageInfo> mImageInfos;
 	const vk::raii::Device& mDevice;
 };
